@@ -1,6 +1,9 @@
 #include "parser.h"
 #define COMMENT_CHAR '#'
 #define MAX_PIXELS 100000000
+#define STREAM_EOF_EXCEPTION std::invalid_argument("Reached end of stream while reading data (EOF)")
+#define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
+#define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
 
 BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream)
 {
@@ -8,19 +11,29 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream)
     int maxValue;
     int width;
     int height;
-    int pixelCount;
+    long pixelCount;
 
-    pNumber = readStringSkipComment(stream);
-    width = readIntSkipComment(stream);
-    height = readIntSkipComment(stream);
-    maxValue = readIntSkipComment(stream);
+    try {
+        pNumber = readStringSkipComment(stream);
+        width = readIntSkipComment(stream);
+        height = readIntSkipComment(stream);
+        maxValue = readIntSkipComment(stream);
+    }
+    catch (std::invalid_argument e) {
+        std::string message = std::string(e.what());
+
+        if (message.find("EOF") != std::string::npos) return STREAM_CORRUPT_EOF;
+
+        return STREAM_CORRUPT;
+    }
 
     pixelCount = width * height;
 
     if (width < 1 || height < 1) return BAD_DIMENSIONS;
     if (pixelCount > MAX_PIXELS) return TOO_LARGE;
 
-    if (pNumber == "P3") {
+    try {
+       if (pNumber == "P3") {
         // only supports maxValue of 255
         if (maxValue != 255)
             return UNSUPPORTED_MAXVALUE;
@@ -34,6 +47,15 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream)
         return SUCCESS;
     } else {
         return UNSUPPORTED_FORMAT;
+    } 
+    }
+    catch (std::invalid_argument e) {
+        std::string message = std::string(e.what());
+
+        if (message.find("EOF") != std::string::npos)
+            return STREAM_CORRUPT_EOF;
+
+        return STREAM_CORRUPT;
     }
 }
 
@@ -41,11 +63,13 @@ std::string Parser::readStringSkipComment(std::istream& stream)
 {
     std::string line;
 
-    while (stream.peek() == COMMENT_CHAR && !stream.bad()) {
+    consumeEmptyLines(stream);
+
+    while (stream.peek() == COMMENT_CHAR) {
         getline(stream, line);
     }
     
-    if (stream.bad()) return "";
+    throwExceptions(stream);
     getline(stream, line);
 
     return line;
@@ -56,15 +80,16 @@ int Parser::readIntSkipComment(std::istream& stream)
     int num;
     std::string trash;
 
-    while (stream.peek() == COMMENT_CHAR && !stream.bad())
+    consumeEmptyLines(stream);
+
+    while (stream.peek() == COMMENT_CHAR)
     {
         getline(stream, trash);
     }
-
-    if (stream.bad())
-        return -1;
     
     stream >> num;
+
+    throwExceptions(stream);
 
     return num;
 }
@@ -72,9 +97,26 @@ int Parser::readIntSkipComment(std::istream& stream)
 Pixel Parser::readPixel(std::istream& stream)
 {
     int r, g, b;
-    stream >> r;
-    stream >> g;
-    stream >> b;
+
+    r = readIntSkipComment(stream);
+    g = readIntSkipComment(stream);
+    b = readIntSkipComment(stream);
 
     return Pixel(r, g, b);
+}
+
+void Parser::throwExceptions(std::istream &stream)
+{
+    if (stream.eof())
+        throw STREAM_EOF_EXCEPTION;
+    if (stream.fail())
+        throw PARSE_NUM_FAILED;
+    if (stream.bad())
+        throw STREAM_EOF_EXCEPTION;
+}
+
+void Parser::consumeEmptyLines(std::istream &stream)
+{
+    while (stream.peek() == '\n')
+        stream.get();
 }

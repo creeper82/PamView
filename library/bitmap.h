@@ -9,7 +9,19 @@ enum BITMAP_LOAD_STATUS
     BAD_DIMENSIONS,
     TOO_LARGE,
     UNSUPPORTED_FORMAT,
-    UNSUPPORTED_MAXVALUE
+    UNSUPPORTED_MAXVALUE,
+    STREAM_CORRUPT_EOF,
+    STREAM_CORRUPT
+};
+
+// Represents the Portable AnyMap variant (P-number)
+enum FILETYPE {
+    // Portable BitMap, a dual color (black or white) bitmap represented using ASCII
+    P1,
+    // Portable GrayMap, a grayscale (0~255) bitmap represented using ASCII
+    P2,
+    // Portable PixMap, an RGB (0~255 x 3) bitmap represented using ASCII 
+    P3
 };
 
 // Represents a 2D bitmap, saves and loads the bitmap, handles image transformations.

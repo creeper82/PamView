@@ -10,6 +10,13 @@ Pixel Bitmap::getPixelAt(int x, int y)
     return map[x][y];
 }
 
+bool Bitmap::setPixelAt(int x, int y, Pixel newPixel)
+{
+    if (!hasPoint(x, y) || map == nullptr) return false;
+    map[x][y] = newPixel;
+    return true;
+}
+
 void Bitmap::setDimensionsAndClear(int newWidth, int newHeight, Pixel defaultFill)
 {
     if (newWidth > 0 && newHeight > 0)

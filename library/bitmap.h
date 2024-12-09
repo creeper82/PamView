@@ -15,6 +15,8 @@ class Bitmap {
         // Returns the pixel at given coordinantes.
         Pixel getPixelAt(int x, int y);
 
+        bool setPixelAt(int x, int y, Pixel newPixel);
+
         // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color.
         void setDimensionsAndClear(int width, int height, Pixel defaultFill = Pixel());
 

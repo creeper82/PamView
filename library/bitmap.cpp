@@ -22,9 +22,12 @@ void Bitmap::setDimensionsAndClear(int newWidth, int newHeight, Pixel defaultFil
 {
     if (newWidth > 0 && newHeight > 0)
     {
+        freeMemory();
         width = newWidth;
         height = newHeight;
-        clear(defaultFill);
+        allocateBitmapMemory(width, height);
+
+        fillBitmap(defaultFill);
     }
     else
     {
@@ -39,6 +42,16 @@ void Bitmap::freeMemory()
         for (int x = 0; x < width; x++)
             delete[] map[x];
         delete[] map;
+        map = nullptr;
+    }
+}
+
+void Bitmap::allocateBitmapMemory(int width, int height)
+{
+    map = new Pixel *[width];
+    for (int x = 0; x < width; x++)
+    {
+        map[x] = new Pixel[height];
     }
 }
 
@@ -47,12 +60,8 @@ bool Bitmap::hasPoint(int x, int y)
     return (x >= 0 && x < width && y >= 0 && y < width);
 }
 
-void Bitmap::clear(Pixel defaultFill)
+void Bitmap::fillBitmap(Pixel defaultFill)
 {
-    freeMemory();
-
-    map = new Pixel *[width];
-
     for (int x = 0; x < width; x++)
     {
         map[x] = new Pixel[height];
@@ -64,9 +73,9 @@ void Bitmap::clear(Pixel defaultFill)
     }
 }
 
-BITMAP_LOAD_STATUS Bitmap::openStream(std::istream& stream)
+BITMAP_LOAD_STATUS Bitmap::openStream(std::istream &stream, void (*progressHandler)(int progressPercent))
 {
-    return Parser::loadToBitmap(*this, stream);
+    return Parser::loadToBitmap(*this, stream, progressHandler);
 }
 
 void Bitmap::transformImage(Pixel (*transformFunction)(Pixel))

@@ -5,7 +5,7 @@
 #define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
 #define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
 
-BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream)
+BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHandler)(int progressPercent))
 {
     std::string pNumber;
     int maxValue;
@@ -37,12 +37,21 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream)
         // only supports maxValue of 255
         if (maxValue != 255)
             return UNSUPPORTED_MAXVALUE;
+
+        bitmap.setDimensionsAndClear(width, height);
         
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
+                if (x % 20 == 0 || y % 20 == 0) {
+                    if (progressHandler != nullptr) {
+                        progressHandler((y*width + width)/(float)pixelCount*100);
+                    }
+                }
                 bitmap.setPixelAt(x, y, readPixel(stream));
             }
         }
+
+        if (progressHandler != nullptr) progressHandler(100);
 
         return SUCCESS;
     } else {

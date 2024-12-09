@@ -43,10 +43,10 @@ class Bitmap {
         void setDimensionsAndClear(int width, int height, Pixel defaultFill = Pixel());
 
         // Clears the bitmap, with possibility to select a fill color.
-        void clear(Pixel defaultFill = Pixel());
+        void fillBitmap(Pixel defaultFill = Pixel());
 
         // Reads PPM bitmap file from stream and overrides the current image.
-        BITMAP_LOAD_STATUS openStream(std::istream& stream);
+        BITMAP_LOAD_STATUS openStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
 
         // Transforms the image based on given transformation function.
         void transformImage(Pixel (*transformFunction)(Pixel));
@@ -61,6 +61,7 @@ class Bitmap {
         Bitmap(int initialWidth, int initialHeight, Pixel defaultFill = Pixel());
     private:
         void freeMemory();
+        void allocateBitmapMemory(int width, int height);
         int width;
         int height;
         bool hasPoint(int x, int y);

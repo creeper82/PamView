@@ -33,3 +33,6 @@
 
 # CMake builds
 build/
+
+# vscode files
+.vscode/

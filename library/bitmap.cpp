@@ -1,4 +1,5 @@
 #include "bitmap.h"
+#include "parser.h"
 
 int Bitmap::getWidth() { return width; }
 int Bitmap::getHeight() { return height; }
@@ -61,6 +62,11 @@ void Bitmap::clear(Pixel defaultFill)
             map[x][y] = defaultFill;
         }
     }
+}
+
+BITMAP_LOAD_STATUS Bitmap::openStream(std::istream& stream)
+{
+    return Parser::loadToBitmap(*this, stream);
 }
 
 void Bitmap::transformImage(Pixel (*transformFunction)(Pixel))

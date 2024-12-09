@@ -2,6 +2,16 @@
 #include <iostream>
 #include "pixel.h"
 
+// Represents the status after reading the bitmap from a stream
+enum BITMAP_LOAD_STATUS
+{
+    SUCCESS,
+    BAD_DIMENSIONS,
+    TOO_LARGE,
+    UNSUPPORTED_FORMAT,
+    UNSUPPORTED_MAXVALUE
+};
+
 // Represents a 2D bitmap, saves and loads the bitmap, handles image transformations.
 class Bitmap {
     // handles a P3 bitmap (PPM)
@@ -24,7 +34,7 @@ class Bitmap {
         void clear(Pixel defaultFill = Pixel());
 
         // Reads PPM bitmap file from stream and overrides the current image.
-        void openStream(std::istream stream);
+        BITMAP_LOAD_STATUS openStream(std::istream& stream);
 
         // Transforms the image based on given transformation function.
         void transformImage(Pixel (*transformFunction)(Pixel));

@@ -68,7 +68,7 @@ class Bitmap {
         void createBlank(int width, int height, Pixel defaultFill = Pixel());
 
         // Clears the bitmap, with possibility to select a fill color.
-        void fillBitmap(Pixel defaultFill = Pixel());
+        void fillWithColor(Pixel defaultFill = Pixel());
 
         // Closes the bitmap if open, and frees the memory. Use createBlank to create.
         void closeBitmap();

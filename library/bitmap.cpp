@@ -44,7 +44,7 @@ void Bitmap::createBlank(int newWidth, int newHeight, Pixel defaultFill)
         height = newHeight;
         allocateBitmapMemory(width, height);
 
-        fillBitmap(defaultFill);
+        fillWithColor(defaultFill);
         clearUndoHistory();
     }
     else
@@ -104,7 +104,7 @@ bool Bitmap::hasPoint(int x, int y)
     return (x >= 0 && x < width && y >= 0 && y < width);
 }
 
-void Bitmap::fillBitmap(Pixel defaultFill)
+void Bitmap::fillWithColor(Pixel defaultFill)
 {
     commitPreChange();
 

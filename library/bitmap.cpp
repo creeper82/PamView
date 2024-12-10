@@ -3,17 +3,21 @@
 
 int Bitmap::getWidth() { return width; }
 int Bitmap::getHeight() { return height; }
+bool Bitmap::hasOpenBitmap()
+{
+    return map != nullptr;
+}
 Pixel Bitmap::getPixelAt(int x, int y)
 {
     if (!hasPoint(x, y)) throw std::invalid_argument("Provided coordinantes are outside the bitmap");
-    if (map == nullptr)
-        return Pixel();
+    if (!hasOpenBitmap())
+        throw std::invalid_argument("No bitmap is open");
     return map[x][y];
 }
 
 bool Bitmap::setPixelAt(int x, int y, Pixel newPixel)
 {
-    if (!hasPoint(x, y) || map == nullptr) return false;
+    if (!hasPoint(x, y) || !hasOpenBitmap()) return false;
     map[x][y] = newPixel;
     return true;
 }
@@ -76,6 +80,11 @@ void Bitmap::fillBitmap(Pixel defaultFill)
 BITMAP_LOAD_STATUS Bitmap::openStream(std::istream &stream, void (*progressHandler)(int progressPercent))
 {
     return Parser::loadToBitmap(*this, stream, progressHandler);
+}
+
+bool Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+{
+    return Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
 }
 
 void Bitmap::transformImage(Pixel (*transformFunction)(Pixel))

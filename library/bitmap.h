@@ -34,6 +34,9 @@ class Bitmap {
         // Returns the bitmap height.
         int getHeight();
 
+        // Returns if any bitmap is open (allocated).
+        bool hasOpenBitmap();
+
         // Returns the pixel at given coordinantes.
         Pixel getPixelAt(int x, int y);
 
@@ -47,6 +50,8 @@ class Bitmap {
 
         // Reads PPM bitmap file from stream and overrides the current image.
         BITMAP_LOAD_STATUS openStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
+
+        bool saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int) = nullptr);
 
         // Transforms the image based on given transformation function.
         void transformImage(Pixel (*transformFunction)(Pixel));

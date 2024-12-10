@@ -5,7 +5,7 @@
 #define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
 #define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
 
-BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHandler)(int progressPercent))
+BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHandler)(int))
 {
     std::string pNumber;
     int maxValue;
@@ -42,11 +42,9 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
         
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (x % 20 == 0 || y % 20 == 0) {
-                    if (progressHandler != nullptr) {
-                        progressHandler((y*width + width)/(float)pixelCount*100);
-                    }
-                }
+                if ((x % 1000 == 0 || y % 1000 == 0) && progressHandler != nullptr)
+                    progressHandler((y * width + width) / (float)pixelCount * 100);
+
                 bitmap.setPixelAt(x, y, readPixel(stream));
             }
         }
@@ -68,7 +66,43 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
     }
 }
 
-std::string Parser::readStringSkipComment(std::istream& stream)
+bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+{
+    if (!bitmap.hasOpenBitmap()) return false;
+    if (filetype == P3) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        long pixelCount = width * height;
+
+        if (pixelCount > MAX_PIXELS) return false;
+
+        stream
+            << "P3" << '\n'
+            << "# Created with PamView" << '\n'
+            << width << ' ' << height << '\n'
+            << 255 << '\n';
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++)
+            {
+                if ((x % 1000 == 0 || y % 1000 == 0) && progressHandler != nullptr)
+                    progressHandler((y * width + width) / (float)pixelCount * 100);
+
+                Pixel pixel = bitmap.getPixelAt(x, y);
+                stream 
+                    << (int)pixel.r << '\n'
+                    << (int)pixel.g << '\n'
+                    << (int)pixel.b << '\n';
+            }
+            
+        }
+
+    }
+
+    return true;
+}
+
+std::string Parser::readStringSkipComment(std::istream &stream)
 {
     std::string line;
 

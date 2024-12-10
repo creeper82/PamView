@@ -39,7 +39,9 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
             return UNSUPPORTED_MAXVALUE;
 
         bitmap.createBlank(width, height);
-        
+
+        if (progressHandler != nullptr) progressHandler(0);
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 if ((x % 1000 == 0 || y % 1000 == 0) && progressHandler != nullptr)
@@ -76,6 +78,8 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
 
         if (pixelCount > MAX_PIXELS) return false;
 
+        if (progressHandler != nullptr) progressHandler(0);
+
         stream
             << "P3" << '\n'
             << "# Created with PamView" << '\n'
@@ -97,6 +101,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
             
         }
 
+        if (progressHandler != nullptr) progressHandler(100);
     }
 
     return true;

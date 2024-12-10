@@ -200,3 +200,8 @@ Bitmap::Bitmap(int initialWidth, int initialHeight, Pixel defaultFill)
         throw std::invalid_argument("Width and height must be over 0");
     }
 }
+
+Bitmap::~Bitmap()
+{
+    freeMemory();
+}

@@ -47,6 +47,15 @@ class Bitmap {
         // Returns the bitmap height.
         int getHeight();
 
+        // Returns the number of bytes occupied by the loaded bitmap.
+        size_t getBitmapMemUsage();
+        
+        // Returns the number of bytes occupied by the undo stack history, if exists.
+        size_t getUndoStackMemUsage();
+
+        // Returns the number of bytes occupied by both the bitmap and undo stack history.
+        size_t getTotalMemUsage();
+
         // Returns if any bitmap is open (allocated).
         bool hasOpenBitmap();
 
@@ -92,6 +101,7 @@ class Bitmap {
         void allocateBitmapMemory(int width, int height);
         void commitPreChange();
         void clearUndoHistory();
+        size_t getMapMemoryUsage(int width, int height);
         std::optional<SavedBitmapState> previousBitmapState { };
         int width = 0;
         int height = 0;

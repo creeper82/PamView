@@ -3,6 +3,18 @@
 
 int Bitmap::getWidth() { return width; }
 int Bitmap::getHeight() { return height; }
+size_t Bitmap::getBitmapMemUsage()
+{
+    return hasOpenBitmap() ? getMapMemoryUsage(width, height) : 0;
+}
+size_t Bitmap::getUndoStackMemUsage()
+{
+    return previousBitmapState.has_value() ? getMapMemoryUsage(previousBitmapState->width, previousBitmapState->height) : 0;
+}
+size_t Bitmap::getTotalMemUsage()
+{
+    return getBitmapMemUsage() + getUndoStackMemUsage();
+}
 bool Bitmap::hasOpenBitmap()
 {
     return map != nullptr;
@@ -80,6 +92,11 @@ void Bitmap::commitPreChange()
 void Bitmap::clearUndoHistory()
 {
     previousBitmapState.reset();
+}
+
+size_t Bitmap::getMapMemoryUsage(int width, int height)
+{
+    return width * height * sizeof(Pixel);
 }
 
 bool Bitmap::hasPoint(int x, int y)

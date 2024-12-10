@@ -42,15 +42,19 @@ class Bitmap {
 
         bool setPixelAt(int x, int y, Pixel newPixel);
 
-        // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color.
-        void setDimensionsAndClear(int width, int height, Pixel defaultFill = Pixel());
+        // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color. Overrides existing bitmap.
+        void createBlank(int width, int height, Pixel defaultFill = Pixel());
 
         // Clears the bitmap, with possibility to select a fill color.
         void fillBitmap(Pixel defaultFill = Pixel());
 
+        // Closes the bitmap if open, and frees the memory. Use createBlank to create.
+        void closeBitmap();
+
         // Reads PPM bitmap file from stream and overrides the current image.
         BITMAP_LOAD_STATUS openStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
 
+        // Saves the PPM bitmap to a stream, based on given filetype (P-number).
         bool saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int) = nullptr);
 
         // Transforms the image based on given transformation function.

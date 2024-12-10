@@ -38,7 +38,7 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
         if (maxValue != 255)
             return UNSUPPORTED_MAXVALUE;
 
-        bitmap.setDimensionsAndClear(width, height);
+        bitmap.createBlank(width, height);
         
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {

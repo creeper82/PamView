@@ -18,6 +18,7 @@ Pixel Bitmap::getPixelAt(int x, int y)
 bool Bitmap::setPixelAt(int x, int y, Pixel newPixel)
 {
     if (!hasPoint(x, y) || !hasOpenBitmap()) return false;
+    commitPreChange();
     map[x][y] = newPixel;
     return true;
 }
@@ -32,6 +33,7 @@ void Bitmap::createBlank(int newWidth, int newHeight, Pixel defaultFill)
         allocateBitmapMemory(width, height);
 
         fillBitmap(defaultFill);
+        clearUndoHistory();
     }
     else
     {
@@ -61,6 +63,25 @@ void Bitmap::allocateBitmapMemory(int width, int height)
     }
 }
 
+void Bitmap::commitPreChange()
+{
+    if (!previousBitmapState.has_value()) previousBitmapState = SavedBitmapState(nullptr, width, height);
+
+    previousBitmapState->map = new Pixel*[width];
+
+    for (int x = 0 ; x < width; x++) {
+        previousBitmapState->map[x] = new Pixel[height];
+        for (int y = 0; y < height; y++) {
+            previousBitmapState->map[x][y] = map[x][y];
+        }
+    }
+}
+
+void Bitmap::clearUndoHistory()
+{
+    previousBitmapState.reset();
+}
+
 bool Bitmap::hasPoint(int x, int y)
 {
     return (x >= 0 && x < width && y >= 0 && y < width);
@@ -68,6 +89,8 @@ bool Bitmap::hasPoint(int x, int y)
 
 void Bitmap::fillBitmap(Pixel defaultFill)
 {
+    commitPreChange();
+
     for (int x = 0; x < width; x++)
     {
         map[x] = new Pixel[height];
@@ -81,11 +104,13 @@ void Bitmap::fillBitmap(Pixel defaultFill)
 
 void Bitmap::closeBitmap()
 {
+    commitPreChange();
     freeMemory();
 }
 
 BITMAP_LOAD_STATUS Bitmap::openStream(std::istream &stream, void (*progressHandler)(int progressPercent))
 {
+    clearUndoHistory();
     return Parser::loadToBitmap(*this, stream, progressHandler);
 }
 
@@ -97,6 +122,8 @@ bool Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, void (*progre
 void Bitmap::transformImage(Pixel (*transformFunction)(Pixel))
 {
     if (hasOpenBitmap()) {
+        commitPreChange();
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -111,6 +138,8 @@ void Bitmap::transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int
 {
     if (hasOpenBitmap())
     {
+        commitPreChange();
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -121,14 +150,30 @@ void Bitmap::transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int
     }
 }
 
+void Bitmap::undoLastChange()
+{
+    if (canUndo()) {
+        SavedBitmapState prevState = previousBitmapState.value();
+        freeMemory();
+        map = prevState.map;
+        width = prevState.width;
+        height = prevState.height;
+        previousBitmapState.reset();
+    }
+    
+}
+
+bool Bitmap::canUndo()
+{
+    return previousBitmapState.has_value();
+}
+
 Bitmap::Bitmap() : Bitmap(100, 100)
 {
 }
 
 Bitmap::Bitmap(int initialWidth, int initialHeight, Pixel defaultFill)
 {
-    map = nullptr;
-
     if (initialWidth > 0 && initialHeight > 0)
     {
         createBlank(initialWidth, initialHeight, defaultFill);

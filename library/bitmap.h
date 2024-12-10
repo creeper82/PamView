@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <optional>
 #include "pixel.h"
 
 // Represents the status after reading the bitmap from a stream
@@ -24,6 +25,18 @@ enum FILETYPE {
     P3
 };
 
+// Represents the bitmap and dimensions at some point in the past, to undo the changes into old state.
+struct SavedBitmapState {
+    Pixel** map = nullptr;
+    int width = 0;
+    int height = 0;
+
+    SavedBitmapState(Pixel **_map, int _width, int _height)
+        : map(_map), width(_width), height(_height) {};
+
+    SavedBitmapState() : SavedBitmapState(nullptr, 0, 0) {};
+};
+
 // Represents a 2D bitmap, saves and loads the bitmap, handles image transformations.
 class Bitmap {
     // handles a P3 bitmap (PPM)
@@ -42,7 +55,7 @@ class Bitmap {
 
         bool setPixelAt(int x, int y, Pixel newPixel);
 
-        // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color. Overrides existing bitmap.
+        // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color. Overrides existing bitmap and clears the undo history.
         void createBlank(int width, int height, Pixel defaultFill = Pixel());
 
         // Clears the bitmap, with possibility to select a fill color.
@@ -63,6 +76,12 @@ class Bitmap {
         // Transforms the image based on given transformation function and strength/level of the transformation.
         void transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int);
 
+        // Undo the last change, and load previous bitmap state, if exists. Related: canUndo()
+        void undoLastChange();
+
+        // Returns if undo operation is available.
+        bool canUndo();
+
         // Creates an empty white 100 x 100 bitmap.
         Bitmap();
 
@@ -71,8 +90,11 @@ class Bitmap {
     private:
         void freeMemory();
         void allocateBitmapMemory(int width, int height);
-        int width;
-        int height;
+        void commitPreChange();
+        void clearUndoHistory();
+        std::optional<SavedBitmapState> previousBitmapState { };
+        int width = 0;
+        int height = 0;
         bool hasPoint(int x, int y);
-        Pixel** map;
+        Pixel** map = nullptr;
 };

@@ -68,7 +68,7 @@ class Bitmap {
         void createBlank(int width, int height, Pixel defaultFill = Pixel());
 
         // Clears the bitmap, with possibility to select a fill color.
-        void fillWithColor(Pixel defaultFill = Pixel());
+        void fillWithColor(Pixel defaultFill = Pixel(), bool skipCommit = false);
 
         // Closes the bitmap if open, and frees the memory. Use createBlank to create.
         void closeBitmap();
@@ -100,6 +100,7 @@ class Bitmap {
         ~Bitmap();
     private:
         void freeMemory();
+        void freePreviousBitmapStateMemory();
         void allocateBitmapMemory(int width, int height);
         void commitPreChange();
         void clearUndoHistory();

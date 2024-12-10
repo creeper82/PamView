@@ -44,7 +44,7 @@ void Bitmap::createBlank(int newWidth, int newHeight, Pixel defaultFill)
         height = newHeight;
         allocateBitmapMemory(width, height);
 
-        fillWithColor(defaultFill);
+        fillWithColor(defaultFill, true);
         clearUndoHistory();
     }
     else
@@ -75,9 +75,26 @@ void Bitmap::allocateBitmapMemory(int width, int height)
     }
 }
 
+void Bitmap::freePreviousBitmapStateMemory()
+{
+    if (previousBitmapState.has_value() && previousBitmapState->map != nullptr) {
+        int width = previousBitmapState->width;
+
+        for (int x = 0; x < width; x++)
+        {
+            delete[] previousBitmapState->map[x];
+        }
+
+        delete[] previousBitmapState->map;
+    }
+}
+
 void Bitmap::commitPreChange()
 {
+    if (!hasOpenBitmap()) return;
     if (!previousBitmapState.has_value()) previousBitmapState = SavedBitmapState(nullptr, width, height);
+
+    freePreviousBitmapStateMemory();
 
     previousBitmapState->map = new Pixel*[width];
 
@@ -91,6 +108,7 @@ void Bitmap::commitPreChange()
 
 void Bitmap::clearUndoHistory()
 {
+    freePreviousBitmapStateMemory();
     previousBitmapState.reset();
 }
 
@@ -104,14 +122,13 @@ bool Bitmap::hasPoint(int x, int y)
     return (x >= 0 && x < width && y >= 0 && y < width);
 }
 
-void Bitmap::fillWithColor(Pixel defaultFill)
+void Bitmap::fillWithColor(Pixel defaultFill, bool skipCommit)
 {
-    commitPreChange();
+    if (!hasOpenBitmap()) return;
+    if (!skipCommit) commitPreChange();
 
     for (int x = 0; x < width; x++)
     {
-        map[x] = new Pixel[height];
-
         for (int y = 0; y < height; y++)
         {
             map[x][y] = defaultFill;
@@ -121,8 +138,8 @@ void Bitmap::fillWithColor(Pixel defaultFill)
 
 void Bitmap::closeBitmap()
 {
-    commitPreChange();
     freeMemory();
+    freePreviousBitmapStateMemory();
 }
 
 BITMAP_LOAD_STATUS Bitmap::openStream(std::istream &stream, void (*progressHandler)(int progressPercent))
@@ -203,5 +220,5 @@ Bitmap::Bitmap(int initialWidth, int initialHeight, Pixel defaultFill)
 
 Bitmap::~Bitmap()
 {
-    freeMemory();
+    closeBitmap();
 }

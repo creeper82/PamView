@@ -43,18 +43,18 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
 
         bitmap.createBlank(width, height);
 
-        if (progressHandler != nullptr) progressHandler(0);
+        if (progressHandler) progressHandler(0);
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (progressHandler != nullptr && (x % 1000 == 0 || y % 1000 == 0))
+                if (progressHandler && (x % 1000 == 0 || y % 1000 == 0))
                     progressHandler((y * width + width) / (float)pixelCount * 100);
 
                 bitmap.setPixelAt(x, y, readPixel(stream, filetype), true);
             }
         }
 
-        if (progressHandler != nullptr) progressHandler(100);
+        if (progressHandler) progressHandler(100);
 
         return SUCCESS;
     } else {
@@ -81,7 +81,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
 
         if (pixelCount > MAX_PIXELS) return false;
 
-        if (progressHandler != nullptr) progressHandler(0);
+        if (progressHandler) progressHandler(0);
 
         stream
             << "P3" << '\n'
@@ -92,7 +92,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++)
             {
-                if (progressHandler != nullptr && (x % 1000 == 0 || y % 1000 == 0))
+                if (progressHandler && (x % 1000 == 0 || y % 1000 == 0))
                     progressHandler((y * width + width) / (float)pixelCount * 100);
 
                 Pixel pixel = bitmap.getPixelAt(x, y);
@@ -104,7 +104,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
             
         }
 
-        if (progressHandler != nullptr) progressHandler(100);
+        if (progressHandler) progressHandler(100);
     }
 
     return true;

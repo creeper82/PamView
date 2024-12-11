@@ -14,8 +14,11 @@ struct RGBColor {
 };
 
 struct HSVColor {
+    // Hue (0-360)
     int hue = 0;
+    // Saturation (0-1)
     float saturation = 0;
+    // Brightness (0-100)
     int brightness = 100;
 
     HSVColor();

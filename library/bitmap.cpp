@@ -119,7 +119,7 @@ size_t Bitmap::getMapMemoryUsage(int width, int height)
 
 bool Bitmap::hasPoint(int x, int y)
 {
-    return (x >= 0 && x < width && y >= 0 && y < width);
+    return (x >= 0 && x < width && y >= 0 && y < height);
 }
 
 void Bitmap::fillWithColor(Pixel defaultFill, bool skipCommit)

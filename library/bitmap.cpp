@@ -202,9 +202,7 @@ bool Bitmap::canUndo()
     return previousBitmapState.has_value();
 }
 
-Bitmap::Bitmap() : Bitmap(100, 100)
-{
-}
+Bitmap::Bitmap() {}
 
 Bitmap::Bitmap(int initialWidth, int initialHeight, Pixel defaultFill)
 {

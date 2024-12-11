@@ -91,7 +91,7 @@ class Bitmap {
         // Returns if undo operation is available.
         bool canUndo();
 
-        // Creates an empty white 100 x 100 bitmap.
+        // Creates an empty bitmap.
         Bitmap();
 
         // Creates an empty bitmap of given dimensions, with possibility to set a default color.

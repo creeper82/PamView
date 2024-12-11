@@ -27,10 +27,10 @@ Pixel Bitmap::getPixelAt(int x, int y)
     return map[x][y];
 }
 
-bool Bitmap::setPixelAt(int x, int y, Pixel newPixel)
+bool Bitmap::setPixelAt(int x, int y, Pixel newPixel, bool skipCommit)
 {
     if (!hasPoint(x, y) || !hasOpenBitmap()) return false;
-    commitPreChange();
+    if (!skipCommit) commitPreChange();
     map[x][y] = newPixel;
     return true;
 }
@@ -142,7 +142,7 @@ void Bitmap::closeBitmap()
     freePreviousBitmapStateMemory();
 }
 
-BITMAP_LOAD_STATUS Bitmap::openStream(std::istream &stream, void (*progressHandler)(int progressPercent))
+BITMAP_LOAD_STATUS Bitmap::openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent))
 {
     clearUndoHistory();
     return Parser::loadToBitmap(*this, stream, progressHandler);

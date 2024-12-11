@@ -8,6 +8,7 @@
 BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHandler)(int))
 {
     std::string pNumber;
+    FILETYPE filetype;
     int maxValue;
     int width;
     int height;
@@ -33,8 +34,10 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
     if (pixelCount > MAX_PIXELS) return TOO_LARGE;
 
     try {
-       if (pNumber == "P3") {
-        // only supports maxValue of 255
+       if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3") {
+        filetype = (FILETYPE)(pNumber[1] - '1');
+
+        // only supports maxValue of 255 (8-bit)
         if (maxValue != 255)
             return UNSUPPORTED_MAXVALUE;
 
@@ -44,10 +47,10 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if ((x % 1000 == 0 || y % 1000 == 0) && progressHandler != nullptr)
+                if (progressHandler != nullptr && (x % 1000 == 0 || y % 1000 == 0))
                     progressHandler((y * width + width) / (float)pixelCount * 100);
 
-                bitmap.setPixelAt(x, y, readPixel(stream));
+                bitmap.setPixelAt(x, y, readPixel(stream, filetype), true);
             }
         }
 
@@ -89,7 +92,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++)
             {
-                if ((x % 1000 == 0 || y % 1000 == 0) && progressHandler != nullptr)
+                if (progressHandler != nullptr && (x % 1000 == 0 || y % 1000 == 0))
                     progressHandler((y * width + width) / (float)pixelCount * 100);
 
                 Pixel pixel = bitmap.getPixelAt(x, y);
@@ -142,13 +145,24 @@ int Parser::readIntSkipComment(std::istream& stream)
     return num;
 }
 
-Pixel Parser::readPixel(std::istream& stream)
+Pixel Parser::readPixel(std::istream& stream, FILETYPE filetype)
 {
     int r, g, b;
 
-    r = readIntSkipComment(stream);
-    g = readIntSkipComment(stream);
-    b = readIntSkipComment(stream);
+    if (filetype == P3) {
+        r = readIntSkipComment(stream);
+        g = readIntSkipComment(stream);
+        b = readIntSkipComment(stream);
+    }
+    if (filetype == P2) {
+        int value = readIntSkipComment(stream);
+        r = g = b = value;
+    }
+    if (filetype == P1) {
+        int value = (readIntSkipComment(stream) == 1 ? 255 : 0);
+        r = g = b = value;
+    }
+    
 
     return Pixel(r, g, b);
 }

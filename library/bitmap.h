@@ -62,7 +62,7 @@ class Bitmap {
         // Returns the pixel at given coordinantes.
         Pixel getPixelAt(int x, int y);
 
-        bool setPixelAt(int x, int y, Pixel newPixel);
+        bool setPixelAt(int x, int y, Pixel newPixel, bool skipCommit = false);
 
         // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color. Overrides existing bitmap and clears the undo history.
         void createBlank(int width, int height, Pixel defaultFill = Pixel());
@@ -73,8 +73,8 @@ class Bitmap {
         // Closes the bitmap if open, and frees the memory. Use createBlank to create.
         void closeBitmap();
 
-        // Reads PPM bitmap file from stream and overrides the current image.
-        BITMAP_LOAD_STATUS openStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
+        // Reads the bitmap file from stream and overrides the current image.
+        BITMAP_LOAD_STATUS openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
 
         // Saves the PPM bitmap to a stream, based on given filetype (P-number).
         bool saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int) = nullptr);

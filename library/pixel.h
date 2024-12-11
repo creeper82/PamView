@@ -1,17 +1,18 @@
 #pragma once
 #include <iostream>
+#include <cstdint>
 
 class Pixel {
     public:
-        u_int8_t r;
-        u_int8_t g;
-        u_int8_t b;
-        Pixel(u_int8_t r, u_int8_t g, u_int8_t b);
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+        Pixel(uint8_t r, uint8_t g, uint8_t b);
         // Creates a default white pixel
         Pixel();
 
         // Gets the grayscale value of this pixel (R, G, and B are equal in grayscale).
-        u_int8_t getGrayscaleValue();
+        uint8_t getGrayscaleValue();
 
         friend std::ostream &operator<<(std::ostream &stream, const Pixel &pixel);
 };

@@ -1,6 +1,6 @@
 #include "pixel.h"
 
-Pixel::Pixel(u_int8_t red, u_int8_t green, u_int8_t blue)
+Pixel::Pixel(uint8_t red, uint8_t green, uint8_t blue)
 {
     r = red;
     g = green;
@@ -9,7 +9,7 @@ Pixel::Pixel(u_int8_t red, u_int8_t green, u_int8_t blue)
 
 Pixel::Pixel() : Pixel(255, 255, 255) {}
 
-u_int8_t Pixel::getGrayscaleValue()
+uint8_t Pixel::getGrayscaleValue()
 {
     return (r + g + b) / 3;
 }
@@ -22,7 +22,7 @@ std::ostream &operator<<(std::ostream &stream, const Pixel &pixel)
 
 Pixel PixelTransformations::grayscale(Pixel pixel)
 {
-    u_int8_t v = pixel.getGrayscaleValue();
+    uint8_t v = pixel.getGrayscaleValue();
     return Pixel(v, v, v);
 }
 

@@ -7,4 +7,5 @@ add_executable(
     bitmap.cpp bitmap.h
     parser.cpp parser.h
     transformations.cpp transformations.h
+    color.cpp color.h
 )

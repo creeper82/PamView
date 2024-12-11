@@ -77,7 +77,7 @@ class Bitmap {
         BITMAP_LOAD_STATUS openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
 
         // Saves the PPM bitmap to a stream, based on given filetype (P-number).
-        bool saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int) = nullptr);
+        bool saveToStream(std::ostream &stream, FILETYPE filetype = P3, void (*progressHandler)(int) = nullptr);
 
         // Transforms the image based on given transformation function.
         void transformImage(Pixel (*transformFunction)(Pixel));

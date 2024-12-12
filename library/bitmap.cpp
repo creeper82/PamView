@@ -1,5 +1,6 @@
 #include "bitmap.h"
 #include "parser.h"
+#define PROGRESS_BAR_UPDATE_TRESHOLD 10000
 
 int Bitmap::getWidth() { return width; }
 int Bitmap::getHeight() { return height; }
@@ -153,34 +154,55 @@ bool Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, void (*progre
     return Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
 }
 
-void Bitmap::transformImage(Pixel (*transformFunction)(Pixel))
+void Bitmap::transformImage(Pixel (*transformFunction)(Pixel), void (*progressHandler)(int))
 {
     if (hasOpenBitmap()) {
         commitPreChange();
 
+        if (progressHandler) progressHandler(0);
+
+        int pixelNum = 0;
+        int pixelCount = width * height;
+
         for (int x = 0; x < width; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height; y++, pixelNum++)
             {
+                if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
+                    progressHandler((float)pixelNum / pixelCount * 100);
+
                 map[x][y] = transformFunction(map[x][y]);
             }
         }
+        if (progressHandler) progressHandler(100);
     }
 }
 
-void Bitmap::transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int level)
+void Bitmap::transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int level, void (*progressHandler)(int))
 {
     if (hasOpenBitmap())
     {
         commitPreChange();
 
+        if (progressHandler)
+            progressHandler(0);
+
+        int pixelNum = 0;
+        int pixelCount = width * height;
+
         for (int x = 0; x < width; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height; y++, pixelNum++)
             {
+                if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
+                    progressHandler((float)pixelNum / pixelCount * 100);
+
                 map[x][y] = transformFunctionWithLevel(map[x][y], level);
             }
         }
+
+        if (progressHandler)
+            progressHandler(100);
     }
 }
 

@@ -1,6 +1,7 @@
 #include "parser.h"
 #define COMMENT_CHAR '#'
 #define MAX_PIXELS 100000000
+#define PROGRESS_BAR_UPDATE_TRESHOLD 10000
 #define STREAM_EOF_EXCEPTION std::invalid_argument("Reached end of stream while reading data (EOF)")
 #define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
 #define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
@@ -45,10 +46,12 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
 
         if (progressHandler) progressHandler(0);
 
+        int pixelNum = 0;
         for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (progressHandler && (x % 1000 == 0 || y % 1000 == 0))
-                    progressHandler((y * width + width) / (float)pixelCount * 100);
+            for (int x = 0; x < width; x++, pixelNum++) {
+                // update progress event every 10000 pixels
+                if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
+                    progressHandler(pixelNum / (float)pixelCount * 100);
 
                 bitmap.setPixelAt(x, y, readPixel(stream, filetype), true);
             }
@@ -89,11 +92,13 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
             << width << ' ' << height << '\n'
             << 255 << '\n';
 
+        int pixelNum = 0;
         for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < width; x++, pixelNum++)
             {
-                if (progressHandler && (x % 1000 == 0 || y % 1000 == 0))
-                    progressHandler((y * width + width) / (float)pixelCount * 100);
+                // update progress event every 10000 pixels
+                if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
+                    progressHandler(pixelNum / (float)pixelCount * 100);
 
                 Pixel pixel = bitmap.getPixelAt(x, y);
                 stream 

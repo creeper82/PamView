@@ -80,10 +80,10 @@ class Bitmap {
         bool saveToStream(std::ostream &stream, FILETYPE filetype = P3, void (*progressHandler)(int) = nullptr);
 
         // Transforms the image based on given transformation function.
-        void transformImage(Pixel (*transformFunction)(Pixel));
+        void transformImage(Pixel (*transformFunction)(Pixel), void(*progressHandler)(int) = nullptr);
 
         // Transforms the image based on given transformation function and strength/level of the transformation.
-        void transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int);
+        void transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int, void (*progressHandler)(int) = nullptr);
 
         // Undo the last change, and load previous bitmap state, if exists. Related: canUndo()
         void undoLastChange();

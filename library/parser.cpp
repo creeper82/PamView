@@ -101,7 +101,7 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
         }
 
         if (progressHandler) progressHandler(100);
-
+        if (rawInput) delete[] rawInput;
         return SUCCESS;
     } else {
         return UNSUPPORTED_FORMAT;
@@ -114,6 +114,9 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
             return STREAM_CORRUPT_EOF;
 
         return STREAM_CORRUPT;
+    }
+    catch (std::exception e) {
+        if (rawInput) delete[] rawInput;
     }
 }
 

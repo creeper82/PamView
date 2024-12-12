@@ -41,7 +41,7 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
         filetype = (FILETYPE)(pNumber[1] - '1');
 
         // only supports maxValue of 255 (8-bit) or 1 for P1
-        if (maxValue != 255 || (filetype == P1 && maxValue != 1))
+        if (maxValue != 255 && maxValue != 1)
             return UNSUPPORTED_MAXVALUE;
 
         bitmap.createBlank(width, height);

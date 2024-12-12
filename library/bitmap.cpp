@@ -38,6 +38,11 @@ bool Bitmap::setPixelAt(int x, int y, Pixel newPixel, bool skipCommit)
 
 void Bitmap::createBlank(int newWidth, int newHeight, Pixel defaultFill)
 {
+    if (newWidth == width && newHeight == height && hasOpenBitmap()) {
+        fillWithColor(defaultFill, true);
+        clearUndoHistory();
+        return;
+    }
     if (newWidth > 0 && newHeight > 0)
     {
         freeMemory();

@@ -155,7 +155,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
         }
 
         if (progressHandler) progressHandler(100);
-    }
+    } else return false;
 
     return true;
 }

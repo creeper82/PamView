@@ -16,13 +16,20 @@ enum BITMAP_LOAD_STATUS
 };
 
 // Represents the Portable AnyMap variant (P-number)
-enum FILETYPE {
+enum FILETYPE
+{
     // Portable BitMap, a dual color (black or white) bitmap represented using ASCII
     P1,
     // Portable GrayMap, a grayscale (0~255) bitmap represented using ASCII
     P2,
-    // Portable PixMap, an RGB (0~255 x 3) bitmap represented using ASCII 
-    P3
+    // Portable PixMap, an RGB (0~255 x 3) bitmap represented using ASCII
+    P3,
+    // Portable BitMap, a dual color (black or white) bitmap represented in binary (raw)
+    P4,
+    // Portable GrayMap, a grayscale (0~255) bitmap represented in binary (raw)
+    P5,
+    // Portable PixMap, an RGB (0~255 x 3) bitmap represented in binary (raw)
+    P6
 };
 
 // Represents the bitmap and dimensions at some point in the past, to undo the changes into old state.

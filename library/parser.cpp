@@ -59,9 +59,6 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
         int pixelNum = 0;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++, pixelNum++) {
-                if (x%7 == 0) {
-                    char xd;
-                }
                 // update progress event every 10000 pixels
                 if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
                     progressHandler(pixelNum / (float)pixelCount * 100);

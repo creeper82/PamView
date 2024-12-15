@@ -3,18 +3,6 @@
 #include <optional>
 #include "pixel.h"
 
-// Represents the status after reading the bitmap from a stream
-enum BITMAP_LOAD_STATUS
-{
-    SUCCESS,
-    BAD_DIMENSIONS,
-    TOO_LARGE,
-    UNSUPPORTED_FORMAT,
-    UNSUPPORTED_MAXVALUE,
-    STREAM_CORRUPT_EOF,
-    STREAM_CORRUPT
-};
-
 // Represents the Portable AnyMap variant (P-number)
 enum FILETYPE
 {
@@ -81,10 +69,10 @@ class Bitmap {
         void closeBitmap();
 
         // Reads the bitmap file from stream and overrides the current image.
-        BITMAP_LOAD_STATUS openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
+        void openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
 
         // Saves the PPM bitmap to a stream, based on given filetype (P-number).
-        bool saveToStream(std::ostream &stream, FILETYPE filetype = P3, void (*progressHandler)(int) = nullptr);
+        void saveToStream(std::ostream &stream, FILETYPE filetype = P3, void (*progressHandler)(int) = nullptr);
 
         // Transforms the image based on given transformation function.
         void transformImage(Pixel (*transformFunction)(Pixel), void(*progressHandler)(int) = nullptr);

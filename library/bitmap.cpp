@@ -149,15 +149,15 @@ void Bitmap::closeBitmap()
     freePreviousBitmapStateMemory();
 }
 
-BITMAP_LOAD_STATUS Bitmap::openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent))
+void Bitmap::openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent))
 {
     clearUndoHistory();
-    return Parser::loadToBitmap(*this, stream, progressHandler);
+    Parser::loadToBitmap(*this, stream, progressHandler);
 }
 
-bool Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+void Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
 {
-    return Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
+    Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
 }
 
 void Bitmap::transformImage(Pixel (*transformFunction)(Pixel), void (*progressHandler)(int))

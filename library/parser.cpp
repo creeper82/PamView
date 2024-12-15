@@ -1,12 +1,13 @@
 #include "parser.h"
+#include "exceptions.h"
 #define COMMENT_CHAR '#'
 #define MAX_PIXELS 100000000
 #define PROGRESS_BAR_UPDATE_TRESHOLD 10000
-#define STREAM_EOF_EXCEPTION std::invalid_argument("Reached end of stream while reading data (EOF)")
-#define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
-#define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
+// #define STREAM_EOF_EXCEPTION std::invalid_argument("Reached end of stream while reading data (EOF)")
+// #define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
+// #define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
 
-BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHandler)(int))
+void Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHandler)(int))
 {
     std::string pNumber;
     FILETYPE filetype;
@@ -17,32 +18,22 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
     char* rawInput = nullptr;
     size_t bytesPerPixel = 0;
 
-    try {
-        pNumber = readStringSkipComment(stream);
-        width = readIntSkipComment(stream);
-        height = readIntSkipComment(stream);
-        maxValue = readIntSkipComment(stream);
-    }
-    catch (std::invalid_argument e) {
-        std::string message = std::string(e.what());
-
-        if (message.find("EOF") != std::string::npos) return STREAM_CORRUPT_EOF;
-
-        return STREAM_CORRUPT;
-    }
+    pNumber = readStringSkipComment(stream);
+    width = readIntSkipComment(stream);
+    height = readIntSkipComment(stream);
+    maxValue = readIntSkipComment(stream);
 
     pixelCount = width * height;
 
-    if (width < 1 || height < 1) return BAD_DIMENSIONS;
-    if (pixelCount > MAX_PIXELS) return TOO_LARGE;
+    if (width < 1 || height < 1) throw bad_dimensions_exception("Width or height was less than 1");
+    if (pixelCount > MAX_PIXELS) throw bad_dimensions_exception("Exceeded maximum supported pixel count");
 
-    try {
-        if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6") {
+    if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6") {
         filetype = (FILETYPE)(pNumber[1] - '1');
 
         // only supports maxValue of 255 (8-bit) or 1 for P1
         if (maxValue != 255 && maxValue != 1)
-            return UNSUPPORTED_MAXVALUE;
+            throw unsupported_maxvalue_exception("This bitmap's color maxvalue is not supported");
 
         bitmap.createBlank(width, height);
 
@@ -90,44 +81,30 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
                         true
                     );
                 }
-                else {
-                   bitmap.setPixelAt(x, y, readPixel(stream, filetype), true); 
-                }
-                
-            }
+            else {
+                bitmap.setPixelAt(x, y, readPixel(stream, filetype), true); 
+            } 
         }
-
-        if (progressHandler) progressHandler(100);
-        if (rawInput) delete[] rawInput;
-        rawInput = nullptr;
-        return SUCCESS;
-    } else {
-        return UNSUPPORTED_FORMAT;
-    } 
     }
-    catch (std::invalid_argument e) {
-        std::string message = std::string(e.what());
 
-        if (message.find("EOF") != std::string::npos)
-            return STREAM_CORRUPT_EOF;
+    if (progressHandler) progressHandler(100);
+    if (rawInput) delete[] rawInput;
+    rawInput = nullptr;
 
-        return STREAM_CORRUPT;
-    }
-    catch (std::exception e) {
-        if (rawInput) delete[] rawInput;
-        return STREAM_CORRUPT;
-    }
+} else {
+    throw unsupported_format_exception("This file format is not supported");
+}
 }
 
-bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
 {
-    if (!bitmap.hasOpenBitmap()) return false;
+    if (!bitmap.hasOpenBitmap()) throw no_bitmap_open_exception("No bitmap was open when trying to save");
     if (filetype == P3) {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         long pixelCount = width * height;
 
-        if (pixelCount > MAX_PIXELS) return false;
+        if (pixelCount > MAX_PIXELS) throw too_large_exception("Bitmap's pixel count too large");
 
         if (progressHandler) progressHandler(0);
 
@@ -155,9 +132,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
         }
 
         if (progressHandler) progressHandler(100);
-    } else return false;
-
-    return true;
+    } else throw unsupported_format_exception("This format is not supported for saving");
 }
 
 std::string Parser::readStringSkipComment(std::istream &stream)
@@ -240,11 +215,11 @@ Pixel Parser::readPixel(std::istream& stream, FILETYPE filetype)
 void Parser::throwExceptions(std::istream &stream)
 {
     if (stream.eof())
-        throw STREAM_EOF_EXCEPTION;
+        throw stream_corrupt_exception("Unexpectedly reached EOF while reading stream", true);
     if (stream.fail())
-        throw PARSE_NUM_FAILED;
+        throw stream_corrupt_exception("Failed to parse data from stream", false);
     if (stream.bad())
-        throw STREAM_EOF_EXCEPTION;
+        throw stream_corrupt_exception("Failure when parsing stream. Could be EOF", true);
 }
 
 void Parser::consumeEmptyLines(std::istream &stream)

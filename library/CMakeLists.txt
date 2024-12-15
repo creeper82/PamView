@@ -8,4 +8,5 @@ add_executable(
     parser.cpp parser.h
     transformations.cpp transformations.h
     color.cpp color.h
+    exceptions.h
 )

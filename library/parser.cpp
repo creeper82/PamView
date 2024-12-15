@@ -14,6 +14,8 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
     int width;
     int height;
     long pixelCount;
+    char* rawInput = nullptr;
+    size_t bytesPerPixel = 0;
 
     try {
         pNumber = readStringSkipComment(stream);
@@ -35,16 +37,24 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
     if (pixelCount > MAX_PIXELS) return TOO_LARGE;
 
     try {
-       if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3") {
+        if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6") {
         filetype = (FILETYPE)(pNumber[1] - '1');
 
-        // only supports maxValue of 255 (8-bit)
-        if (maxValue != 255)
+        // only supports maxValue of 255 (8-bit) or 1 for P1
+        if (maxValue != 255 && maxValue != 1)
             return UNSUPPORTED_MAXVALUE;
 
         bitmap.createBlank(width, height);
 
         if (progressHandler) progressHandler(0);
+
+        // Read all at once for binary files
+        if (filetype > P3) {
+            bytesPerPixel = (filetype == P6 ? 3 : 1);
+            rawInput = new char[pixelCount*bytesPerPixel];
+            stream.read(rawInput, pixelCount*bytesPerPixel);
+            throwExceptions(stream);
+        }
 
         int pixelNum = 0;
         for (int y = 0; y < height; y++) {
@@ -53,12 +63,43 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
                 if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
                     progressHandler(pixelNum / (float)pixelCount * 100);
 
-                bitmap.setPixelAt(x, y, readPixel(stream, filetype), true);
+                if (filetype == P6) {
+                    bitmap.setPixelAt(x, y, 
+                        Pixel(
+                            rawInput[pixelNum*bytesPerPixel],
+                            rawInput[pixelNum*bytesPerPixel + 1],
+                            rawInput[pixelNum*bytesPerPixel + 2]
+                        ), true);
+                }
+                else if (filetype == P5) {
+                    uint8_t value = rawInput[pixelNum*bytesPerPixel];
+
+                    bitmap.setPixelAt(x, y,
+                        Pixel(
+                            value, value, value
+                        ),
+                        true
+                    );
+                }
+                else if (filetype == P4) {
+                    uint8_t value = rawInput[pixelNum*bytesPerPixel] == 1 ? 255 : 0;
+                    bitmap.setPixelAt(x, y, 
+                        Pixel(
+                            value, value, value
+                        ),
+                        true
+                    );
+                }
+                else {
+                   bitmap.setPixelAt(x, y, readPixel(stream, filetype), true); 
+                }
+                
             }
         }
 
         if (progressHandler) progressHandler(100);
-
+        if (rawInput) delete[] rawInput;
+        rawInput = nullptr;
         return SUCCESS;
     } else {
         return UNSUPPORTED_FORMAT;
@@ -70,6 +111,10 @@ BITMAP_LOAD_STATUS Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, vo
         if (message.find("EOF") != std::string::npos)
             return STREAM_CORRUPT_EOF;
 
+        return STREAM_CORRUPT;
+    }
+    catch (std::exception e) {
+        if (rawInput) delete[] rawInput;
         return STREAM_CORRUPT;
     }
 }
@@ -110,7 +155,7 @@ bool Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
         }
 
         if (progressHandler) progressHandler(100);
-    }
+    } else return false;
 
     return true;
 }
@@ -150,21 +195,41 @@ int Parser::readIntSkipComment(std::istream& stream)
     return num;
 }
 
+char Parser::readRawChar(std::istream& stream)
+{
+    char value;
+    stream.read(&value, 1);
+    throwExceptions(stream);
+    return value;
+}
+
 Pixel Parser::readPixel(std::istream& stream, FILETYPE filetype)
 {
-    int r, g, b;
-
+    uint8_t r, g, b;
+    if (filetype == P6) {
+        r = readRawChar(stream);
+        g = readRawChar(stream);
+        b = readRawChar(stream);
+    }
     if (filetype == P3) {
         r = readIntSkipComment(stream);
         g = readIntSkipComment(stream);
         b = readIntSkipComment(stream);
     }
+    if (filetype == P5) {
+        uint8_t value = readRawChar(stream);
+        r = g = b = value;
+    }
     if (filetype == P2) {
-        int value = readIntSkipComment(stream);
+        uint8_t value = readIntSkipComment(stream);
+        r = g = b = value;
+    }
+    if (filetype == P4) {
+        uint8_t value = (readRawChar(stream) == 1 ? 255 : 0);
         r = g = b = value;
     }
     if (filetype == P1) {
-        int value = (readIntSkipComment(stream) == 1 ? 255 : 0);
+        uint8_t value = (readIntSkipComment(stream) == 1 ? 255 : 0);
         r = g = b = value;
     }
     

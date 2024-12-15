@@ -1,5 +1,6 @@
 #include "bitmap.h"
 #include "parser.h"
+#define MAX_PIXELS 100000000
 #define PROGRESS_BAR_UPDATE_TRESHOLD 10000
 
 int Bitmap::getWidth() { return width; }
@@ -38,6 +39,11 @@ bool Bitmap::setPixelAt(int x, int y, Pixel newPixel, bool skipCommit)
 
 void Bitmap::createBlank(int newWidth, int newHeight, Pixel defaultFill)
 {
+    if (newWidth == width && newHeight == height && hasOpenBitmap()) {
+        fillWithColor(defaultFill, true);
+        clearUndoHistory();
+        return;
+    }
     if (newWidth > 0 && newHeight > 0)
     {
         freeMemory();
@@ -228,6 +234,9 @@ Bitmap::Bitmap() {}
 
 Bitmap::Bitmap(int initialWidth, int initialHeight, Pixel defaultFill)
 {
+    if (initialWidth * initialHeight > MAX_PIXELS || initialWidth > INT32_MAX / initialHeight) {
+        throw std::invalid_argument("Exceeded max allowed pixel count: " + std::to_string(MAX_PIXELS));
+    }
     if (initialWidth > 0 && initialHeight > 0)
     {
         createBlank(initialWidth, initialHeight, defaultFill);

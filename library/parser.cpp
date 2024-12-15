@@ -22,6 +22,7 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressH
     width = readIntSkipComment(stream);
     height = readIntSkipComment(stream);
     maxValue = readIntSkipComment(stream);
+    consumeEmptyLines(stream);
 
     pixelCount = width * height;
 

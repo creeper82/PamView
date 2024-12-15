@@ -7,7 +7,7 @@
 // #define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
 // #define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
 
-void Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHandler)(int))
+void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressHandler)(int))
 {
     std::string pNumber;
     FILETYPE filetype;
@@ -15,7 +15,7 @@ void Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHa
     int width;
     int height;
     long pixelCount;
-    char* rawInput = nullptr;
+    char *rawInput = nullptr;
     size_t bytesPerPixel = 0;
 
     pNumber = readStringSkipComment(stream);
@@ -25,10 +25,13 @@ void Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHa
 
     pixelCount = width * height;
 
-    if (width < 1 || height < 1) throw bad_dimensions_exception("Width or height was less than 1");
-    if (pixelCount > MAX_PIXELS) throw bad_dimensions_exception("Exceeded maximum supported pixel count");
+    if (width < 1 || height < 1)
+        throw bad_dimensions_exception("Width or height was less than 1");
+    if (pixelCount > MAX_PIXELS)
+        throw bad_dimensions_exception("Exceeded maximum supported pixel count");
 
-    if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6") {
+    if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6")
+    {
         filetype = (FILETYPE)(pNumber[1] - '1');
 
         // only supports maxValue of 255 (8-bit) or 1 for P1
@@ -37,76 +40,87 @@ void Parser::loadToBitmap(Bitmap& bitmap, std::istream& stream, void(*progressHa
 
         bitmap.createBlank(width, height);
 
-        if (progressHandler) progressHandler(0);
+        if (progressHandler)
+            progressHandler(0);
 
         // Read all at once for binary files
-        if (filetype > P3) {
+        if (filetype > P3)
+        {
             bytesPerPixel = (filetype == P6 ? 3 : 1);
-            rawInput = new char[pixelCount*bytesPerPixel];
-            stream.read(rawInput, pixelCount*bytesPerPixel);
+            rawInput = new char[pixelCount * bytesPerPixel];
+            stream.read(rawInput, pixelCount * bytesPerPixel);
             throwExceptions(stream);
         }
 
         int pixelNum = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++, pixelNum++) {
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++, pixelNum++)
+            {
                 // update progress event every 10000 pixels
                 if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
                     progressHandler(pixelNum / (float)pixelCount * 100);
 
-                if (filetype == P6) {
-                    bitmap.setPixelAt(x, y, 
-                        Pixel(
-                            rawInput[pixelNum*bytesPerPixel],
-                            rawInput[pixelNum*bytesPerPixel + 1],
-                            rawInput[pixelNum*bytesPerPixel + 2]
-                        ), true);
+                if (filetype == P6)
+                {
+                    bitmap.setPixelAt(x, y,
+                                      Pixel(
+                                          rawInput[pixelNum * bytesPerPixel],
+                                          rawInput[pixelNum * bytesPerPixel + 1],
+                                          rawInput[pixelNum * bytesPerPixel + 2]),
+                                      true);
                 }
-                else if (filetype == P5) {
-                    uint8_t value = rawInput[pixelNum*bytesPerPixel];
+                else if (filetype == P5)
+                {
+                    uint8_t value = rawInput[pixelNum * bytesPerPixel];
 
                     bitmap.setPixelAt(x, y,
-                        Pixel(
-                            value, value, value
-                        ),
-                        true
-                    );
+                                      Pixel(
+                                          value, value, value),
+                                      true);
                 }
-                else if (filetype == P4) {
-                    uint8_t value = rawInput[pixelNum*bytesPerPixel] == 1 ? 255 : 0;
-                    bitmap.setPixelAt(x, y, 
-                        Pixel(
-                            value, value, value
-                        ),
-                        true
-                    );
+                else if (filetype == P4)
+                {
+                    uint8_t value = rawInput[pixelNum * bytesPerPixel] == 1 ? 255 : 0;
+                    bitmap.setPixelAt(x, y,
+                                      Pixel(
+                                          value, value, value),
+                                      true);
                 }
-            else {
-                bitmap.setPixelAt(x, y, readPixel(stream, filetype), true); 
-            } 
+                else
+                {
+                    bitmap.setPixelAt(x, y, readPixel(stream, filetype), true);
+                }
+            }
         }
+
+        if (progressHandler)
+            progressHandler(100);
+        if (rawInput)
+            delete[] rawInput;
+        rawInput = nullptr;
     }
-
-    if (progressHandler) progressHandler(100);
-    if (rawInput) delete[] rawInput;
-    rawInput = nullptr;
-
-} else {
-    throw unsupported_format_exception("This file format is not supported");
-}
+    else
+    {
+        throw unsupported_format_exception("This file format is not supported");
+    }
 }
 
 void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
 {
-    if (!bitmap.hasOpenBitmap()) throw no_bitmap_open_exception("No bitmap was open when trying to save");
-    if (filetype == P3) {
+    if (!bitmap.hasOpenBitmap())
+        throw no_bitmap_open_exception("No bitmap was open when trying to save");
+    if (filetype == P3)
+    {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         long pixelCount = width * height;
 
-        if (pixelCount > MAX_PIXELS) throw too_large_exception("Bitmap's pixel count too large");
+        if (pixelCount > MAX_PIXELS)
+            throw too_large_exception("Bitmap's pixel count too large");
 
-        if (progressHandler) progressHandler(0);
+        if (progressHandler)
+            progressHandler(0);
 
         stream
             << "P3" << '\n'
@@ -115,7 +129,8 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
             << 255 << '\n';
 
         int pixelNum = 0;
-        for (int y = 0; y < height; y++) {
+        for (int y = 0; y < height; y++)
+        {
             for (int x = 0; x < width; x++, pixelNum++)
             {
                 // update progress event every 10000 pixels
@@ -123,16 +138,18 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
                     progressHandler(pixelNum / (float)pixelCount * 100);
 
                 Pixel pixel = bitmap.getPixelAt(x, y);
-                stream 
+                stream
                     << (int)pixel.r << '\n'
                     << (int)pixel.g << '\n'
                     << (int)pixel.b << '\n';
             }
-            
         }
 
-        if (progressHandler) progressHandler(100);
-    } else throw unsupported_format_exception("This format is not supported for saving");
+        if (progressHandler)
+            progressHandler(100);
+    }
+    else
+        throw unsupported_format_exception("This format is not supported for saving");
 }
 
 std::string Parser::readStringSkipComment(std::istream &stream)
@@ -141,17 +158,18 @@ std::string Parser::readStringSkipComment(std::istream &stream)
 
     consumeEmptyLines(stream);
 
-    while (stream.peek() == COMMENT_CHAR) {
+    while (stream.peek() == COMMENT_CHAR)
+    {
         getline(stream, line);
     }
-    
+
     throwExceptions(stream);
     getline(stream, line);
 
     return line;
 }
 
-int Parser::readIntSkipComment(std::istream& stream)
+int Parser::readIntSkipComment(std::istream &stream)
 {
     int num;
     std::string trash;
@@ -162,7 +180,7 @@ int Parser::readIntSkipComment(std::istream& stream)
     {
         getline(stream, trash);
     }
-    
+
     stream >> num;
 
     throwExceptions(stream);
@@ -170,7 +188,7 @@ int Parser::readIntSkipComment(std::istream& stream)
     return num;
 }
 
-char Parser::readRawChar(std::istream& stream)
+char Parser::readRawChar(std::istream &stream)
 {
     char value;
     stream.read(&value, 1);
@@ -178,36 +196,41 @@ char Parser::readRawChar(std::istream& stream)
     return value;
 }
 
-Pixel Parser::readPixel(std::istream& stream, FILETYPE filetype)
+Pixel Parser::readPixel(std::istream &stream, FILETYPE filetype)
 {
     uint8_t r, g, b;
-    if (filetype == P6) {
+    if (filetype == P6)
+    {
         r = readRawChar(stream);
         g = readRawChar(stream);
         b = readRawChar(stream);
     }
-    if (filetype == P3) {
+    if (filetype == P3)
+    {
         r = readIntSkipComment(stream);
         g = readIntSkipComment(stream);
         b = readIntSkipComment(stream);
     }
-    if (filetype == P5) {
+    if (filetype == P5)
+    {
         uint8_t value = readRawChar(stream);
         r = g = b = value;
     }
-    if (filetype == P2) {
+    if (filetype == P2)
+    {
         uint8_t value = readIntSkipComment(stream);
         r = g = b = value;
     }
-    if (filetype == P4) {
+    if (filetype == P4)
+    {
         uint8_t value = (readRawChar(stream) == 1 ? 255 : 0);
         r = g = b = value;
     }
-    if (filetype == P1) {
+    if (filetype == P1)
+    {
         uint8_t value = (readIntSkipComment(stream) == 1 ? 255 : 0);
         r = g = b = value;
     }
-    
 
     return Pixel(r, g, b);
 }

@@ -18,8 +18,10 @@ namespace PixelTransformations
     {
         HSVColor hsv = Conversions::RGBToHSV(pixel);
         hsv.brightness += level;
-        if (hsv.brightness < 0) hsv.brightness = 0;
-        if (hsv.brightness > 255) hsv.brightness = 255;
+        if (hsv.brightness < 0)
+            hsv.brightness = 0;
+        if (hsv.brightness > 255)
+            hsv.brightness = 255;
         RGBColor rgb = Conversions::HSVToRGB(hsv);
         Pixel brightnessChanged = Pixel(rgb.r, rgb.g, rgb.b);
         return brightnessChanged;
@@ -33,9 +35,11 @@ namespace PixelTransformations
     Pixel saturation(Pixel pixel, int level)
     {
         HSVColor hsv = Conversions::RGBToHSV(pixel);
-        hsv.saturation += ((float)level/100);
-        if (hsv.saturation < 0) hsv.saturation = 0;
-        if (hsv.saturation > 1) hsv.saturation = 1;
+        hsv.saturation += ((float)level / 100);
+        if (hsv.saturation < 0)
+            hsv.saturation = 0;
+        if (hsv.saturation > 1)
+            hsv.saturation = 1;
         RGBColor rgb = Conversions::HSVToRGB(hsv);
         Pixel saturated = Pixel(rgb.r, rgb.g, rgb.b);
         return saturated;

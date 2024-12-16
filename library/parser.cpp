@@ -64,33 +64,28 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressH
 
                 if (filetype == P6)
                 {
-                    bitmap.setPixelAt(x, y,
-                                      Pixel(
-                                          rawInput[pixelNum * bytesPerPixel],
-                                          rawInput[pixelNum * bytesPerPixel + 1],
-                                          rawInput[pixelNum * bytesPerPixel + 2]),
-                                      true);
+                    bitmap.setPixelAtFast(x, y,
+                        Pixel(
+                            rawInput[pixelNum * bytesPerPixel],
+                            rawInput[pixelNum * bytesPerPixel + 1],
+                            rawInput[pixelNum * bytesPerPixel + 2]
+                        )
+                    );
                 }
                 else if (filetype == P5)
                 {
                     uint8_t value = rawInput[pixelNum * bytesPerPixel];
 
-                    bitmap.setPixelAt(x, y,
-                                      Pixel(
-                                          value, value, value),
-                                      true);
+                    bitmap.setPixelAtFast(x, y, Pixel(value, value, value));
                 }
                 else if (filetype == P4)
                 {
                     uint8_t value = rawInput[pixelNum * bytesPerPixel] == 1 ? 255 : 0;
-                    bitmap.setPixelAt(x, y,
-                                      Pixel(
-                                          value, value, value),
-                                      true);
+                    bitmap.setPixelAtFast(x, y, Pixel(value, value, value));
                 }
                 else
                 {
-                    bitmap.setPixelAt(x, y, readPixel(stream, filetype), true);
+                    bitmap.setPixelAtFast(x, y, readPixel(stream, filetype));
                 }
             }
         }
@@ -138,7 +133,7 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
                 if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
                     progressHandler(pixelNum / (float)pixelCount * 100);
 
-                Pixel pixel = bitmap.getPixelAt(x, y);
+                Pixel pixel = bitmap.getPixelAtFast(x, y);
                 stream
                     << (int)pixel.r << '\n'
                     << (int)pixel.g << '\n'
@@ -200,37 +195,45 @@ char Parser::readRawChar(std::istream &stream)
 Pixel Parser::readPixel(std::istream &stream, FILETYPE filetype)
 {
     uint8_t r, g, b;
+
     if (filetype == P6)
     {
         r = readRawChar(stream);
         g = readRawChar(stream);
         b = readRawChar(stream);
     }
-    if (filetype == P3)
+    else if (filetype == P3)
     {
-        r = readIntSkipComment(stream);
-        g = readIntSkipComment(stream);
-        b = readIntSkipComment(stream);
+        int ir, ig, ib;
+
+        stream >> ir;
+        stream >> ig;
+        stream >> ib;
+
+        r = ir;
+        g = ig;
+        b = ib;
     }
-    if (filetype == P5)
+    else if (filetype == P5)
     {
-        uint8_t value = readRawChar(stream);
+        r = g = b = stream.get();
+    }
+    else if (filetype == P2)
+    {
+        uint8_t value;
+        stream >> value;
         r = g = b = value;
     }
-    if (filetype == P2)
-    {
-        uint8_t value = readIntSkipComment(stream);
-        r = g = b = value;
-    }
-    if (filetype == P4)
+    else if (filetype == P4)
     {
         uint8_t value = (readRawChar(stream) == 1 ? 255 : 0);
         r = g = b = value;
     }
-    if (filetype == P1)
+    else if (filetype == P1)
     {
-        uint8_t value = (readIntSkipComment(stream) == 1 ? 255 : 0);
-        r = g = b = value;
+        uint8_t value;
+        stream >> value;
+        r = g = b = (value == 1 ? 255 : 0);
     }
 
     return Pixel(r, g, b);
@@ -248,6 +251,6 @@ void Parser::throwExceptions(std::istream &stream)
 
 void Parser::consumeEmptyLines(std::istream &stream)
 {
-    while (stream.peek() == '\n')
+    while (stream.peek() == '\n' || stream.peek() == '\r')
         stream.get();
 }

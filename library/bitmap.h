@@ -57,7 +57,13 @@ class Bitmap {
         // Returns the pixel at given coordinantes.
         Pixel getPixelAt(int x, int y);
 
+        // Returns the pixel at given coordinantes, used for internal purposes. Skips a lot of checks.
+        Pixel getPixelAtFast(int x, int y);
+
         bool setPixelAt(int x, int y, Pixel newPixel, bool skipCommit = false);
+
+        // Quick pixel set, used for internal purposes. Skips a lot of checks.
+        void setPixelAtFast(int x, int y, Pixel newPixel);
 
         // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color. Overrides existing bitmap and clears the undo history.
         void createBlank(int width, int height, Pixel defaultFill = Pixel());

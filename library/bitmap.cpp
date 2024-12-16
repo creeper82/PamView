@@ -30,6 +30,11 @@ Pixel Bitmap::getPixelAt(int x, int y)
     return map[x][y];
 }
 
+Pixel Bitmap::getPixelAtFast(int x, int y)
+{
+    return map[x][y];
+}
+
 bool Bitmap::setPixelAt(int x, int y, Pixel newPixel, bool skipCommit)
 {
     if (!hasPoint(x, y) || !hasOpenBitmap())
@@ -38,6 +43,11 @@ bool Bitmap::setPixelAt(int x, int y, Pixel newPixel, bool skipCommit)
         commitPreChange();
     map[x][y] = newPixel;
     return true;
+}
+
+void Bitmap::setPixelAtFast(int x, int y, Pixel newPixel)
+{
+    map[x][y] = newPixel;
 }
 
 void Bitmap::createBlank(int newWidth, int newHeight, Pixel defaultFill)

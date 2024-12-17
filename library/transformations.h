@@ -16,4 +16,7 @@ namespace PixelTransformations {
 
     // Returns the pixel but in negative.
     Pixel negative(Pixel pixel);
+
+    // Returns the pixel either fully white or fully black. Uses luminance formula to decide.
+    Pixel blacknwhite(Pixel pixel);
 }

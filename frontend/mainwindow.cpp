@@ -2,11 +2,16 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QtWidgets>
-
 #include "mainwindow.h"
 
-MainWindow::MainWindow()
-{
+
+MainWindow::MainWindow() : MainWindow(new Bitmap()) {}
+
+MainWindow::MainWindow(Bitmap* initialBitmap) {
+    bitmap1 = initialBitmap;
+    bitmap2 = new Bitmap();
+    activeBitmap = 1;
+
     QWidget *widget = new QWidget;
     setCentralWidget(widget);
 
@@ -14,7 +19,7 @@ MainWindow::MainWindow()
     topFiller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     infoLabel = new QLabel(tr("<i>Choose a menu option, or right-click to "
-                              "invoke a context menu</i>"));
+                            "invoke a context menu</i>"));
     infoLabel->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     infoLabel->setAlignment(Qt::AlignCenter);
 
@@ -39,6 +44,11 @@ MainWindow::MainWindow()
     resize(480, 320);
 }
 
+MainWindow::~MainWindow() {
+    delete bitmap1;
+    delete bitmap2;
+}
+
 #ifndef QT_NO_CONTEXTMENU
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
@@ -52,22 +62,30 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 
 void MainWindow::newBitmap()
 {
-    infoLabel->setText(tr("Invoked <b>File|New</b>"));
+    
 }
 
 void MainWindow::open()
 {
-    infoLabel->setText(tr("Invoked <b>File|Open</b>"));
+    
 }
 
 void MainWindow::save()
 {
-    infoLabel->setText(tr("Invoked <b>File|Save</b>"));
+    
+}
+
+void MainWindow::closeBitmap() {
+    getActiveBitmap()->closeBitmap();
+}
+
+void MainWindow::exit() {
+    close();
 }
 
 void MainWindow::undo()
 {
-    infoLabel->setText(tr("Invoked <b>Edit|Undo</b>"));
+    
 }
 
 void MainWindow::transformBrightness()
@@ -92,10 +110,7 @@ void MainWindow::transformBlackAndWhite()
 
 void MainWindow::about()
 {
-    infoLabel->setText(tr("Invoked <b>Help|About</b>"));
-    QMessageBox::about(this, tr("About Menu"),
-            tr("The <b>Menu</b> example shows how to create "
-               "menu-bar menus and context menus. Edited by me a bit"));
+    QMessageBox::about(this, tr("Bitmap width:"), QStringLiteral("Bitmap width: %1").arg(getActiveBitmap()->getWidth()));
 }
 
 void MainWindow::createActions()
@@ -103,7 +118,8 @@ void MainWindow::createActions()
     newAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentNew),
                          tr("&New"), this);
     newAct->setShortcuts(QKeySequence::New);
-    newAct->setStatusTip(tr("Create a new bitmap"));
+    newAct->setStatusTip(tr("Create a new blank bitmap"));
+    newAct->
     connect(newAct, &QAction::triggered, this, &MainWindow::newBitmap);
 
     openAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen),
@@ -117,6 +133,16 @@ void MainWindow::createActions()
     saveAct->setShortcuts(QKeySequence::Save);
     saveAct->setStatusTip(tr("Save the bitmap to disk"));
     connect(saveAct, &QAction::triggered, this, &MainWindow::save);
+
+    closeBitmapAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::EditClear),
+                            tr("&Close bitmap"), this);
+    closeBitmapAct->setStatusTip(tr("Close the current bitmap, freeing the memory"));
+    connect(closeBitmapAct, &QAction::triggered, this, &MainWindow::closeBitmap);
+
+    exitAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::WindowClose),
+                            tr("&Exit program"), this);
+    exitAct->setStatusTip(tr("Exit the window and close bitmaps"));
+    connect(exitAct, &QAction::triggered, this, &MainWindow::exit);
 
     undoAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::EditUndo),
                           tr("&Undo"), this);
@@ -161,7 +187,7 @@ void MainWindow::createActions()
 
     aboutAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
                            tr("&About"), this);
-    aboutAct->setStatusTip(tr("Show the application's About box"));
+    aboutAct->setStatusTip(tr("Show the bitmap information"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
 }
 void MainWindow::createMenus()
@@ -170,6 +196,8 @@ void MainWindow::createMenus()
     fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
+    fileMenu->addAction(closeBitmapAct);
+    fileMenu->addAction(exitAct);
     fileMenu->addSeparator();
     
     
@@ -185,4 +213,8 @@ void MainWindow::createMenus()
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(aboutAct);
+}
+
+Bitmap* MainWindow::getActiveBitmap() {
+    return (activeBitmap == 1) ? bitmap1 : bitmap2;
 }

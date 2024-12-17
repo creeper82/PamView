@@ -5,6 +5,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "bitmap.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -19,6 +20,8 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow();
+    MainWindow(Bitmap* initialBitmap);
+    ~MainWindow();
 
 protected:
 #ifndef QT_NO_CONTEXTMENU
@@ -28,6 +31,8 @@ private slots:
     void newBitmap();
     void open();
     void save();
+    void closeBitmap();
+    void exit();
     void undo();
     void transformBrightness();
     void transformSaturation();
@@ -38,6 +43,10 @@ private slots:
 private:
     void createActions();
     void createMenus();
+    Bitmap* getActiveBitmap();
+    int activeBitmap;
+    Bitmap* bitmap1;
+    Bitmap* bitmap2;
     QMenu *fileMenu;
     QMenu *editMenu;
     QMenu *transformMenu;
@@ -45,6 +54,8 @@ private:
     QAction *newAct;
     QAction *openAct;
     QAction *saveAct;
+    QAction *closeBitmapAct;
+    QAction *exitAct;
     QAction *undoAct;
     QAction *transformBrightnessAct;
     QAction *transformSaturationAct;

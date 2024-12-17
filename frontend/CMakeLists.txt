@@ -12,6 +12,8 @@ qt_add_executable(pamview_qt
     mainwindow.cpp mainwindow.h
 )
 
+include_directories(../library)
+
 set_target_properties(pamview_qt PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
@@ -21,6 +23,7 @@ target_link_libraries(pamview_qt PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    pamview_library
 )
 
 install(TARGETS pamview_qt

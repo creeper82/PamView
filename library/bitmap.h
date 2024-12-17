@@ -98,6 +98,9 @@ class Bitmap {
         // Creates an empty bitmap of given dimensions, with possibility to set a default color.
         Bitmap(int initialWidth, int initialHeight, Pixel defaultFill = Pixel());
 
+        Bitmap(const Bitmap&) = delete;
+        Bitmap& operator=(const Bitmap&) = delete;
+
         ~Bitmap();
     private:
         void freeMemory();

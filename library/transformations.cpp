@@ -44,4 +44,11 @@ namespace PixelTransformations
         Pixel saturated = Pixel(rgb.r, rgb.g, rgb.b);
         return saturated;
     }
+
+    Pixel blacknwhite(Pixel pixel)
+    {
+        int luminance = 0.3*pixel.r + 0.587*pixel.g + 0.114*pixel.b;
+        if (luminance > 127) return Pixel(255, 255, 255);
+        else return Pixel(0, 0, 0);
+    }
 }

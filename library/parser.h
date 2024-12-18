@@ -5,8 +5,8 @@
 class Parser
 {
 public:
-    static void loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressHandler)(int) = nullptr);
-    static void saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int) = nullptr);
+    static void loadToBitmap(Bitmap &bitmap, std::istream &stream, std::function<void(int)> progressHandler = nullptr);
+    static void saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, std::function<void(int)> progressHandler = nullptr);
 
 private:
     static std::string readStringSkipComment(std::istream &stream);

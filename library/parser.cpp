@@ -7,7 +7,7 @@
 // #define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
 // #define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
 
-void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressHandler)(int))
+void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, std::function<void(int)> progressHandler)
 {
     std::string pNumber;
     FILETYPE filetype;
@@ -102,7 +102,7 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressH
     }
 }
 
-void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, std::function<void(int)> progressHandler)
 {
     if (!bitmap.hasOpenBitmap())
         throw no_bitmap_open_exception("No bitmap was open when trying to save");

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QtWidgets>
+#include <functional>
 #include "mainwindow.h"
+#include "transformations.h"
 #include "zoomablecanvas.h"
 
 
@@ -95,6 +97,11 @@ void MainWindow::transformNegative()
 
 void MainWindow::transformGrayscale()
 {
+    getActiveBitmap()->transformImage(
+        PixelTransformations::grayscale,
+        std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+    );
+    renderCanvas();
 }
 
 void MainWindow::transformBlackAndWhite()

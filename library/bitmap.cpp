@@ -1,5 +1,6 @@
 #include "bitmap.h"
 #include "parser.h"
+#include <functional>
 #define MAX_PIXELS 100000000
 #define PROGRESS_BAR_UPDATE_TRESHOLD 10000
 
@@ -170,18 +171,18 @@ void Bitmap::closeBitmap()
     freePreviousBitmapStateMemory();
 }
 
-void Bitmap::openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent))
+void Bitmap::openFromStream(std::istream &stream, progressHandlerType progressHandler)
 {
     clearUndoHistory();
     Parser::loadToBitmap(*this, stream, progressHandler);
 }
 
-void Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+void Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, progressHandlerType progressHandler)
 {
     Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
 }
 
-void Bitmap::transformImage(Pixel (*transformFunction)(Pixel), void (*progressHandler)(int))
+void Bitmap::transformImage(transformType transformFunction, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {
@@ -208,7 +209,7 @@ void Bitmap::transformImage(Pixel (*transformFunction)(Pixel), void (*progressHa
     }
 }
 
-void Bitmap::transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int level, void (*progressHandler)(int))
+void Bitmap::transformImage(transformWithLevelType transformFunctionWithLevel, int level, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {

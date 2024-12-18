@@ -80,7 +80,8 @@ void MainWindow::exit() {
 
 void MainWindow::undo()
 {
-    
+    getActiveBitmap()->undoLastChange();
+    renderCanvas();
 }
 
 void MainWindow::transformBrightness()

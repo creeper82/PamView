@@ -6,6 +6,7 @@
 #include "mainwindow.h"
 #include "transformations.h"
 #include "zoomablecanvas.h"
+#include "sliderdialog.h"
 
 
 MainWindow::MainWindow() : MainWindow(new Bitmap()) {}
@@ -86,10 +87,20 @@ void MainWindow::undo()
 
 void MainWindow::transformBrightness()
 {
+    SliderDialog dialog(nullptr, "Adjust brightness");
+
+    if (dialog.exec() == QDialog::Accepted) {
+        transformActiveBitmapAndRender(PixelTransformations::brightness, dialog.getValue());
+    }
 }
 
 void MainWindow::transformSaturation()
 {
+    SliderDialog dialog(nullptr, "Adjust saturation");
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        transformActiveBitmapAndRender(PixelTransformations::saturation, dialog.getValue());
+    }
 }
 
 void MainWindow::transformNegative()

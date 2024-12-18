@@ -53,6 +53,8 @@ private:
     void createActions();
     void createMenus();
     void renderCanvas();
+    void transformActiveBitmapAndRender(transformType transformFunction);
+    void transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level);
     void setupNoBitmapOpenWidget();
     void handleProgress(int progress);
     void setActiveBitmap(DUAL_BITMAP bitmap);

@@ -94,19 +94,17 @@ void MainWindow::transformSaturation()
 
 void MainWindow::transformNegative()
 {
+    transformActiveBitmapAndRender(PixelTransformations::negative);
 }
 
 void MainWindow::transformGrayscale()
 {
-    getActiveBitmap()->transformImage(
-        PixelTransformations::grayscale,
-        std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
-    );
-    renderCanvas();
+    transformActiveBitmapAndRender(PixelTransformations::grayscale);
 }
 
 void MainWindow::transformBlackAndWhite()
 {
+    transformActiveBitmapAndRender(PixelTransformations::blacknwhite);
 }
 
 void MainWindow::setFirstBitmap() {
@@ -310,6 +308,27 @@ void MainWindow::renderCanvas() {
         
         stackedWidget->setCurrentWidget(noBitmapOpenWidget);
     }
+}
+
+void MainWindow::transformActiveBitmapAndRender(transformType transformFunction)
+{
+    getActiveBitmap()->transformImage(
+        transformFunction,
+        std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+    );
+
+    renderCanvas();
+}
+
+void MainWindow::transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level)
+{
+    getActiveBitmap()->transformImage(
+        transformFunction,
+        level,
+        std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+    );
+    
+    renderCanvas();
 }
 
 void MainWindow::setActiveBitmap(DUAL_BITMAP desiredBitmap) {

@@ -6,6 +6,7 @@
 
 #include <QMainWindow>
 #include "bitmap.h"
+#include "zoomablecanvas.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -13,6 +14,12 @@ class QActionGroup;
 class QLabel;
 class QMenu;
 QT_END_NAMESPACE
+
+// Represents either first or second bitmap in the current window.
+enum DUAL_BITMAP {
+    FIRST_BITMAP = 1,
+    SECOND_BITMAP = 2
+};
 
 class MainWindow : public QMainWindow
 {
@@ -39,17 +46,23 @@ private slots:
     void transformNegative();
     void transformGrayscale();
     void transformBlackAndWhite();
+    void setFirstBitmap();
+    void setSecondBitmap();
     void about();
 private:
     void createActions();
     void createMenus();
+    void renderCanvas();
+    void setupNoBitmapOpenWidget();
+    void setActiveBitmap(DUAL_BITMAP bitmap);
     Bitmap* getActiveBitmap();
-    int activeBitmap;
+    int activeBitmapNumber;
     Bitmap* bitmap1;
     Bitmap* bitmap2;
     QMenu *fileMenu;
     QMenu *editMenu;
     QMenu *transformMenu;
+    QMenu *dualBitmapMenu;
     QMenu *helpMenu;
     QAction *newAct;
     QAction *openAct;
@@ -62,8 +75,16 @@ private:
     QAction *transformNegativeAct;
     QAction *transformGrayscaleAct;
     QAction *transformBlackAndWhiteAct;
+    QAction *firstBitmapAct;
+    QAction *secondBitmapAct;
     QAction *aboutAct;
-    QLabel *infoLabel;
+    QStackedWidget* stackedWidget = nullptr;
+    QWidget *noBitmapOpenWidget = nullptr;
+    QLabel *noBitmapLabel = nullptr;
+    ZoomableCanvas* canvas = nullptr;
+    QGraphicsScene* scene = nullptr;
+    QGraphicsPixmapItem* pixmapItem = nullptr;
+    QImage image;
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <QtWidgets>
 #include "mainwindow.h"
+#include "zoomablecanvas.h"
 
 
 MainWindow::MainWindow() : MainWindow(new Bitmap()) {}
@@ -10,28 +11,16 @@ MainWindow::MainWindow() : MainWindow(new Bitmap()) {}
 MainWindow::MainWindow(Bitmap* initialBitmap) {
     bitmap1 = initialBitmap;
     bitmap2 = new Bitmap();
-    activeBitmap = 1;
 
-    QWidget *widget = new QWidget;
-    setCentralWidget(widget);
+    canvas = new ZoomableCanvas(this);
+    scene = new QGraphicsScene();
+    canvas->setScene(scene);
 
-    QWidget *topFiller = new QWidget;
-    topFiller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setupNoBitmapOpenWidget();
 
-    infoLabel = new QLabel(tr("<i>Choose a menu option, or right-click to "
-                            "invoke a context menu</i>"));
-    infoLabel->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-    infoLabel->setAlignment(Qt::AlignCenter);
-
-    QWidget *bottomFiller = new QWidget;
-    bottomFiller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-    QVBoxLayout *layout = new QVBoxLayout;
-    layout->setContentsMargins(5, 5, 5, 5);
-    layout->addWidget(topFiller);
-    layout->addWidget(infoLabel);
-    layout->addWidget(bottomFiller);
-    widget->setLayout(layout);
+    stackedWidget = new QStackedWidget(this);
+    stackedWidget->addWidget(canvas);
+    stackedWidget->addWidget(noBitmapOpenWidget);
 
     createActions();
     createMenus();
@@ -39,9 +28,13 @@ MainWindow::MainWindow(Bitmap* initialBitmap) {
     QString message = tr("A context menu is available by right-clicking");
     statusBar()->showMessage(message);
 
-    setWindowTitle(tr("PAMView"));
+    setWindowTitle(tr("PAMview"));
     setMinimumSize(160, 160);
     resize(480, 320);
+
+    setCentralWidget(stackedWidget);
+
+    setActiveBitmap(FIRST_BITMAP);
 }
 
 MainWindow::~MainWindow() {
@@ -77,6 +70,7 @@ void MainWindow::save()
 
 void MainWindow::closeBitmap() {
     getActiveBitmap()->closeBitmap();
+    renderCanvas();
 }
 
 void MainWindow::exit() {
@@ -108,9 +102,34 @@ void MainWindow::transformBlackAndWhite()
 {
 }
 
+void MainWindow::setFirstBitmap() {
+    setActiveBitmap(FIRST_BITMAP);
+}
+
+void MainWindow::setSecondBitmap() {
+    setActiveBitmap(SECOND_BITMAP);
+}
+
 void MainWindow::about()
 {
-    QMessageBox::about(this, tr("Bitmap width:"), QStringLiteral("Bitmap width: %1").arg(getActiveBitmap()->getWidth()));
+    int width = getActiveBitmap()->getWidth();
+    int height = getActiveBitmap()->getHeight();
+    size_t memoryUsageBitmap = getActiveBitmap()->getBitmapMemUsage();
+    size_t memoryUsageUndo = getActiveBitmap()->getUndoStackMemUsage();
+
+    int mbBitmap = memoryUsageBitmap / (1024 * 1024);
+    int mbUndo = memoryUsageUndo / (1024 * 1024);
+
+    QMessageBox::about(
+        this,
+        tr("Bitmap details"),
+        QStringLiteral(
+            "Details of the visible bitmap:\n\n"
+            "Dimensions: %1*%2 px\n"
+            "Bitmap memory usage: ~%3MB\n"
+            "Undo stack memory usage: ~%4MB"
+        ).arg(width).arg(height).arg(mbBitmap).arg(mbUndo)
+    );
 }
 
 void MainWindow::createActions()
@@ -119,7 +138,6 @@ void MainWindow::createActions()
                          tr("&New"), this);
     newAct->setShortcuts(QKeySequence::New);
     newAct->setStatusTip(tr("Create a new blank bitmap"));
-    newAct->
     connect(newAct, &QAction::triggered, this, &MainWindow::newBitmap);
 
     openAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen),
@@ -185,6 +203,19 @@ void MainWindow::createActions()
     transformBlackAndWhiteAct->setStatusTip(tr("Make the image black and white"));
     connect(transformBlackAndWhiteAct, &QAction::triggered, this, &MainWindow::transformBlackAndWhite);
 
+    // DualBitmap toggles
+    firstBitmapAct = new QAction(
+        tr("&First"),
+        this);
+    firstBitmapAct->setStatusTip(tr("Switch to the first bitmap"));
+    connect(firstBitmapAct, &QAction::triggered, this, &MainWindow::setFirstBitmap);
+
+    secondBitmapAct = new QAction(
+        tr("&Second"),
+        this);
+    secondBitmapAct->setStatusTip(tr("Switch to the second bitmap"));
+    connect(secondBitmapAct, &QAction::triggered, this, &MainWindow::setSecondBitmap);
+
     aboutAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
                            tr("&About"), this);
     aboutAct->setStatusTip(tr("Show the bitmap information"));
@@ -211,10 +242,99 @@ void MainWindow::createMenus()
     transformMenu->addAction(transformGrayscaleAct);
     transformMenu->addAction(transformBlackAndWhiteAct);
 
+    dualBitmapMenu = menuBar()->addMenu(tr("&DualBitmap"));
+    dualBitmapMenu->addAction(firstBitmapAct);
+    dualBitmapMenu->addAction(secondBitmapAct);
+
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(aboutAct);
 }
 
+void MainWindow::renderCanvas() {
+    Bitmap* bitmap = getActiveBitmap();
+    bool hasOpenBitmap = bitmap->hasOpenBitmap();
+
+    closeBitmapAct->setEnabled(hasOpenBitmap);
+    saveAct->setEnabled(hasOpenBitmap);
+    undoAct->setEnabled(hasOpenBitmap && bitmap->canUndo());
+
+    transformMenu->setEnabled(hasOpenBitmap);
+
+    if (hasOpenBitmap) {
+        int width = bitmap->getWidth();
+        int height = bitmap->getHeight();
+
+        statusBar()->showMessage("Rendering image...");
+
+        scene->setSceneRect(0, 0, width, height);
+        QImage image(width, height, QImage::Format_RGB888);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Pixel pixel = bitmap->getPixelAt(x, y);
+                image.setPixel(x, y, qRgb(pixel.r, pixel.g, pixel.b));
+            }
+        }
+
+        QPixmap pixmap = QPixmap::fromImage(image);
+
+        if (!pixmapItem) {
+            pixmapItem = new QGraphicsPixmapItem(pixmap);
+            scene->addItem(pixmapItem);
+        } else {
+            pixmapItem->setPixmap(pixmap);
+        }
+
+        stackedWidget->setCurrentWidget(canvas);
+
+        statusBar()->clearMessage();
+    } else {
+        if (pixmapItem) {
+           scene->clear();
+           pixmapItem = nullptr;
+        }
+        
+        stackedWidget->setCurrentWidget(noBitmapOpenWidget);
+    }
+}
+
+void MainWindow::setActiveBitmap(DUAL_BITMAP desiredBitmap) {
+    int desiredBitmapNumber = (desiredBitmap == FIRST_BITMAP ? 1 : 2);
+    if (desiredBitmapNumber != activeBitmapNumber) {
+        activeBitmapNumber = desiredBitmapNumber;
+        renderCanvas();
+    }
+
+    if (desiredBitmap == FIRST_BITMAP) {
+        firstBitmapAct->setText(tr("&First") + " [*]");
+        secondBitmapAct->setText(tr("&Second"));
+    } else {
+        firstBitmapAct->setText(tr("&First"));
+        secondBitmapAct->setText(tr("&Second") + " [*]");
+    }
+}
+
 Bitmap* MainWindow::getActiveBitmap() {
-    return (activeBitmap == 1) ? bitmap1 : bitmap2;
+    return (activeBitmapNumber == 1) ? bitmap1 : bitmap2;
+}
+
+void MainWindow::setupNoBitmapOpenWidget()
+{
+    noBitmapOpenWidget = new QWidget;
+
+    QWidget *topFiller = new QWidget;
+    topFiller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    noBitmapLabel = new QLabel(tr("No bitmap open. Create a new bitmap, or open a file."));
+    noBitmapLabel->setAlignment(Qt::AlignCenter);
+
+    QWidget *bottomFiller = new QWidget;
+    bottomFiller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    QVBoxLayout *noBitmapOpenLayout = new QVBoxLayout;
+    noBitmapOpenLayout->setContentsMargins(5, 5, 5, 5);
+    noBitmapOpenLayout->addWidget(topFiller);
+    noBitmapOpenLayout->addWidget(noBitmapLabel);
+    noBitmapOpenLayout->addWidget(bottomFiller);
+    noBitmapOpenWidget->setLayout(noBitmapOpenLayout);
 }

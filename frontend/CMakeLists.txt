@@ -11,6 +11,7 @@ qt_add_executable(pamview_qt
     main.cpp
     mainwindow.cpp mainwindow.h
     zoomablecanvas.cpp zoomablecanvas.h
+    sliderdialog.cpp sliderdialog.h
 )
 
 include_directories(../library)

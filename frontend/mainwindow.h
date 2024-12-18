@@ -54,6 +54,7 @@ private:
     void createMenus();
     void renderCanvas();
     void setupNoBitmapOpenWidget();
+    void handleProgress(int progress);
     void setActiveBitmap(DUAL_BITMAP bitmap);
     Bitmap* getActiveBitmap();
     int activeBitmapNumber;

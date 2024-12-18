@@ -25,8 +25,7 @@ MainWindow::MainWindow(Bitmap* initialBitmap) {
     createActions();
     createMenus();
 
-    QString message = tr("A context menu is available by right-clicking");
-    statusBar()->showMessage(message);
+    statusBar();
 
     setWindowTitle(tr("PAMview"));
     setMinimumSize(160, 160);
@@ -231,7 +230,6 @@ void MainWindow::createMenus()
     fileMenu->addAction(exitAct);
     fileMenu->addSeparator();
     
-    
     editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(undoAct);
     transformMenu = editMenu->addMenu("&Transform");
@@ -263,14 +261,22 @@ void MainWindow::renderCanvas() {
     if (hasOpenBitmap) {
         int width = bitmap->getWidth();
         int height = bitmap->getHeight();
+        int totalPixels = width * height;
 
-        statusBar()->showMessage("Rendering image...");
+        statusBar()->showMessage(tr("Rendering... %1\%").arg(0));
+        QCoreApplication::processEvents();
 
         scene->setSceneRect(0, 0, width, height);
         QImage image(width, height, QImage::Format_RGB888);
 
+        int pixelNumber = 0;
         for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+            for (int y = 0; y < height; y++, pixelNumber++) {
+                if (pixelNumber % 10000 == 0) {
+                    statusBar()->showMessage(tr("Rendering... %1\%").arg((100*pixelNumber) / totalPixels));
+                    QCoreApplication::processEvents();
+                }
+
                 Pixel pixel = bitmap->getPixelAt(x, y);
                 image.setPixel(x, y, qRgb(pixel.r, pixel.g, pixel.b));
             }
@@ -337,4 +343,14 @@ void MainWindow::setupNoBitmapOpenWidget()
     noBitmapOpenLayout->addWidget(noBitmapLabel);
     noBitmapOpenLayout->addWidget(bottomFiller);
     noBitmapOpenWidget->setLayout(noBitmapOpenLayout);
+}
+
+void MainWindow::handleProgress(int progress)
+{
+    if (progress == 100) {
+        statusBar()->clearMessage();
+    } else {
+        statusBar()->showMessage(tr("Loading... %1\%").arg(progress));
+    }
+    QCoreApplication::processEvents();
 }

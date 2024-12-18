@@ -310,7 +310,9 @@ void MainWindow::renderCanvas() {
 
         stackedWidget->setCurrentWidget(canvas);
 
-        statusBar()->clearMessage();
+        size_t memoryUsage = bitmap->getBitmapMemUsage();
+        int memoryUsageMb = memoryUsage / (1024 * 1024);
+        statusBar()->showMessage(QString("Loaded %1x%2 pixels ~ %3 MB").arg(width).arg(height).arg(memoryUsageMb));
     } else {
         if (pixmapItem) {
            scene->clear();
@@ -318,6 +320,7 @@ void MainWindow::renderCanvas() {
         }
         
         stackedWidget->setCurrentWidget(noBitmapOpenWidget);
+        statusBar()->clearMessage();
     }
 }
 

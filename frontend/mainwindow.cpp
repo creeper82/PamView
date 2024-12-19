@@ -67,10 +67,14 @@ void MainWindow::open()
     if (!filename.isEmpty() && QFile::exists(filename)) {
         std::ifstream stream(filename.toStdString());
 
+        disableTopMenus();
+
         getActiveBitmap()->openFromStream(
             stream,
             std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
         );
+
+        enableTopMenus();
 
         stream.close();
         renderCanvas();
@@ -89,7 +93,11 @@ void MainWindow::save()
     if (!filename.isEmpty()) {
         std::ofstream stream(filename.toStdString());
 
+        disableTopMenus();
+
         getActiveBitmap()->saveToStream(stream, P3, std::bind(&MainWindow::handleProgress, this, std::placeholders::_1));
+
+        enableTopMenus();
 
         statusBar()->showMessage("File saved!");
     }
@@ -299,6 +307,7 @@ void MainWindow::renderCanvas() {
         int totalPixels = width * height;
 
         statusBar()->showMessage(tr("Rendering... %1\%").arg(0));
+        disableTopMenus();
         QCoreApplication::processEvents();
 
         QImage image(width, height, QImage::Format_RGB888);
@@ -329,6 +338,8 @@ void MainWindow::renderCanvas() {
 
         stackedWidget->setCurrentWidget(canvas);
 
+        enableTopMenus();
+
         size_t memoryUsage = bitmap->getBitmapMemUsage();
         int memoryUsageMb = memoryUsage / (1024 * 1024);
         statusBar()->showMessage(QString("Loaded %1x%2 pixels ~ %3 MB").arg(width).arg(height).arg(memoryUsageMb));
@@ -343,23 +354,43 @@ void MainWindow::renderCanvas() {
     }
 }
 
+void MainWindow::disableTopMenus() {
+    fileMenu->setEnabled(false);
+    editMenu->setEnabled(false);
+    dualBitmapMenu->setEnabled(false);
+}
+
+void MainWindow::enableTopMenus() {
+    fileMenu->setEnabled(true);
+    editMenu->setEnabled(true);
+    dualBitmapMenu->setEnabled(true);
+}
+
 void MainWindow::transformActiveBitmapAndRender(transformType transformFunction)
 {
+    disableTopMenus();
+
     getActiveBitmap()->transformImage(
         transformFunction,
         std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
     );
+
+    enableTopMenus();
 
     renderCanvas();
 }
 
 void MainWindow::transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level)
 {
+    disableTopMenus();
+
     getActiveBitmap()->transformImage(
         transformFunction,
         level,
         std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
     );
+
+    enableTopMenus();
     
     renderCanvas();
 }

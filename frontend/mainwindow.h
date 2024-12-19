@@ -52,6 +52,8 @@ private:
     void createActions();
     void createMenus();
     void renderCanvas();
+    void disableTopMenus();
+    void enableTopMenus();
     void transformActiveBitmapAndRender(transformType transformFunction);
     void transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level);
     void setupNoBitmapOpenWidget();

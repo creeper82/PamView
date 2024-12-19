@@ -109,6 +109,8 @@ void Bitmap::freePreviousBitmapStateMemory()
         }
 
         delete[] previousBitmapState->map;
+
+        previousBitmapState->map = nullptr;
     }
 }
 

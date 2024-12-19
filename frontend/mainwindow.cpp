@@ -3,6 +3,7 @@
 
 #include <QtWidgets>
 #include <functional>
+#include <fstream>
 #include "mainwindow.h"
 #include "transformations.h"
 #include "zoomablecanvas.h"
@@ -57,12 +58,41 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 
 void MainWindow::open()
 {
+    auto filename = QFileDialog::getOpenFileName(this,
+        tr("Open image"),
+        QStandardPaths::writableLocation(QStandardPaths::PicturesLocation),
+        tr("Portable anymap (*.pbm *.pgm *.ppm)")
+    );
+
+    if (!filename.isEmpty() && QFile::exists(filename)) {
+        std::ifstream stream(filename.toStdString());
+
+        getActiveBitmap()->openFromStream(
+            stream,
+            std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+        );
+
+        stream.close();
+        renderCanvas();
+    }
     
 }
 
 void MainWindow::save()
 {
-    
+    auto filename = QFileDialog::getSaveFileName(
+        this, tr("Save image"),
+        QStandardPaths::writableLocation(QStandardPaths::PicturesLocation),
+        tr("Portable anymap (*.pbm *.pgm *.ppm)")
+    );
+
+    if (!filename.isEmpty()) {
+        std::ofstream stream(filename.toStdString());
+
+        getActiveBitmap()->saveToStream(stream, P3, std::bind(&MainWindow::handleProgress, this, std::placeholders::_1));
+
+        statusBar()->showMessage("File saved!");
+    }
 }
 
 void MainWindow::closeBitmap() {
@@ -271,7 +301,6 @@ void MainWindow::renderCanvas() {
         statusBar()->showMessage(tr("Rendering... %1\%").arg(0));
         QCoreApplication::processEvents();
 
-        scene->setSceneRect(0, 0, width, height);
         QImage image(width, height, QImage::Format_RGB888);
 
         int pixelNumber = 0;
@@ -295,6 +324,8 @@ void MainWindow::renderCanvas() {
         } else {
             pixmapItem->setPixmap(pixmap);
         }
+
+        scene->setSceneRect(0, 0, width, height);
 
         stackedWidget->setCurrentWidget(canvas);
 

@@ -48,17 +48,12 @@ MainWindow::~MainWindow() {
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu(this);
-    menu.addAction(newAct);
     menu.addAction(openAct);
     menu.addAction(saveAct);
+    menu.addAction(aboutAct);
     menu.exec(event->globalPos());
 }
 #endif
-
-void MainWindow::newBitmap()
-{
-    
-}
 
 void MainWindow::open()
 {
@@ -150,12 +145,6 @@ void MainWindow::about()
 
 void MainWindow::createActions()
 {
-    newAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentNew),
-                         tr("&New"), this);
-    newAct->setShortcuts(QKeySequence::New);
-    newAct->setStatusTip(tr("Create a new blank bitmap"));
-    connect(newAct, &QAction::triggered, this, &MainWindow::newBitmap);
-
     openAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen),
                           tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
@@ -240,7 +229,6 @@ void MainWindow::createActions()
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
     fileMenu->addAction(closeBitmapAct);

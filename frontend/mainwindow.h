@@ -35,7 +35,6 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 #endif
 private slots:
-    void newBitmap();
     void open();
     void save();
     void closeBitmap();
@@ -67,7 +66,6 @@ private:
     QMenu *transformMenu;
     QMenu *dualBitmapMenu;
     QMenu *helpMenu;
-    QAction *newAct;
     QAction *openAct;
     QAction *saveAct;
     QAction *closeBitmapAct;

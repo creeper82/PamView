@@ -372,6 +372,8 @@ void MainWindow::renderCanvas() {
 
         stackedWidget->setCurrentWidget(canvas);
 
+        canvas->fitInView(pixmapItem, Qt::KeepAspectRatio);
+
         enableTopMenus();
 
         size_t memoryUsage = bitmap->getBitmapMemUsage();

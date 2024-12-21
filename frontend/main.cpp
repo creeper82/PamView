@@ -4,13 +4,13 @@
 #include <QApplication>
 #include <QtWidgets>
 
-#include "mainwindow.h"
+#include "pamview_window.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     
-    MainWindow window;
+    PamViewWindow window;
     
     window.show();
     return app.exec();

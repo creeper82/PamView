@@ -1,8 +1,8 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef PAMVIEW_WINDOW_H
+#define PAMVIEW_WINDOW_H
 
 #include <QMainWindow>
 #include "bitmap.h"
@@ -21,14 +21,14 @@ enum DUAL_BITMAP {
     SECOND_BITMAP = 2
 };
 
-class MainWindow : public QMainWindow
+class PamViewWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow();
-    MainWindow(Bitmap* initialBitmap);
-    ~MainWindow();
+    PamViewWindow();
+    PamViewWindow(Bitmap* initialBitmap);
+    ~PamViewWindow();
 
 protected:
 #ifndef QT_NO_CONTEXTMENU

@@ -5,7 +5,7 @@
 #include <exception>
 #include <functional>
 #include <fstream>
-#include "mainwindow.h"
+#include "pamview_window.h"
 #include "bitmap.h"
 #include "exceptions.h"
 #include "transformations.h"
@@ -13,9 +13,9 @@
 #include "sliderdialog.h"
 
 
-MainWindow::MainWindow() : MainWindow(new Bitmap()) {}
+PamViewWindow::PamViewWindow() : PamViewWindow(new Bitmap()) {}
 
-MainWindow::MainWindow(Bitmap* initialBitmap) {
+PamViewWindow::PamViewWindow(Bitmap* initialBitmap) {
     bitmap1 = initialBitmap;
     bitmap2 = new Bitmap();
 
@@ -43,13 +43,13 @@ MainWindow::MainWindow(Bitmap* initialBitmap) {
     setActiveBitmap(FIRST_BITMAP);
 }
 
-MainWindow::~MainWindow() {
+PamViewWindow::~PamViewWindow() {
     delete bitmap1;
     delete bitmap2;
 }
 
 #ifndef QT_NO_CONTEXTMENU
-void MainWindow::contextMenuEvent(QContextMenuEvent *event)
+void PamViewWindow::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu(this);
     menu.addAction(openAct);
@@ -59,7 +59,7 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 }
 #endif
 
-void MainWindow::open()
+void PamViewWindow::open()
 {
     auto filename = QFileDialog::getOpenFileName(this,
         tr("Open image"),
@@ -75,7 +75,7 @@ void MainWindow::open()
         try {
             getActiveBitmap()->openFromStream(
                 stream,
-                std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+                std::bind(&PamViewWindow::handleProgress, this, std::placeholders::_1)
             );
         }
         catch (std::exception) {
@@ -90,17 +90,17 @@ void MainWindow::open()
     
 }
 
-void MainWindow::saveP3()
+void PamViewWindow::saveP3()
 {
     showDialogAndSaveAs(P3);
 }
 
-void MainWindow::saveP6()
+void PamViewWindow::saveP6()
 {
     showDialogAndSaveAs(P6);
 }
 
-void MainWindow::saveHelp()
+void PamViewWindow::saveHelp()
 {
     QMessageBox::about(
         this,
@@ -124,22 +124,22 @@ void MainWindow::saveHelp()
     );
 }
 
-void MainWindow::closeBitmap() {
+void PamViewWindow::closeBitmap() {
     getActiveBitmap()->closeBitmap();
     renderCanvas();
 }
 
-void MainWindow::exit() {
+void PamViewWindow::exit() {
     close();
 }
 
-void MainWindow::undo()
+void PamViewWindow::undo()
 {
     getActiveBitmap()->undoLastChange();
     renderCanvas();
 }
 
-void MainWindow::transformBrightness()
+void PamViewWindow::transformBrightness()
 {
     SliderDialog dialog(nullptr, "Adjust brightness");
 
@@ -148,7 +148,7 @@ void MainWindow::transformBrightness()
     }
 }
 
-void MainWindow::transformSaturation()
+void PamViewWindow::transformSaturation()
 {
     SliderDialog dialog(nullptr, "Adjust saturation");
     
@@ -157,30 +157,30 @@ void MainWindow::transformSaturation()
     }
 }
 
-void MainWindow::transformNegative()
+void PamViewWindow::transformNegative()
 {
     transformActiveBitmapAndRender(PixelTransformations::negative);
 }
 
-void MainWindow::transformGrayscale()
+void PamViewWindow::transformGrayscale()
 {
     transformActiveBitmapAndRender(PixelTransformations::grayscale);
 }
 
-void MainWindow::transformBlackAndWhite()
+void PamViewWindow::transformBlackAndWhite()
 {
     transformActiveBitmapAndRender(PixelTransformations::blacknwhite);
 }
 
-void MainWindow::setFirstBitmap() {
+void PamViewWindow::setFirstBitmap() {
     setActiveBitmap(FIRST_BITMAP);
 }
 
-void MainWindow::setSecondBitmap() {
+void PamViewWindow::setSecondBitmap() {
     setActiveBitmap(SECOND_BITMAP);
 }
 
-void MainWindow::bitmapDetails()
+void PamViewWindow::bitmapDetails()
 {
     int width = getActiveBitmap()->getWidth();
     int height = getActiveBitmap()->getHeight();
@@ -202,99 +202,99 @@ void MainWindow::bitmapDetails()
     );
 }
 
-void MainWindow::createActions()
+void PamViewWindow::createActions()
 {
     openAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen),
                           tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing bitmap"));
-    connect(openAct, &QAction::triggered, this, &MainWindow::open);
+    connect(openAct, &QAction::triggered, this, &PamViewWindow::open);
 
     saveP3Act = new QAction(tr("&ASCII"), this);
     saveP3Act->setStatusTip(tr("Save in a P3 format (ASCII)"));
-    connect(saveP3Act, &QAction::triggered, this, &MainWindow::saveP3);
+    connect(saveP3Act, &QAction::triggered, this, &PamViewWindow::saveP3);
 
     saveP6Act = new QAction(tr("&Binary (raw)"), this);
     saveP6Act->setShortcuts(QKeySequence::Save);
     saveP6Act->setStatusTip(tr("Save in a P6 format (binary / raw)"));
-    connect(saveP6Act, &QAction::triggered, this, &MainWindow::saveP6);
+    connect(saveP6Act, &QAction::triggered, this, &PamViewWindow::saveP6);
 
     saveHelpAct = new QAction(
         QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
         tr("&How to pick"), this);
     saveHelpAct->setStatusTip(tr("Display the save help menu"));
-    connect(saveHelpAct, &QAction::triggered, this, &MainWindow::saveHelp);
+    connect(saveHelpAct, &QAction::triggered, this, &PamViewWindow::saveHelp);
 
     closeBitmapAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::EditClear),
                             tr("&Close bitmap"), this);
     closeBitmapAct->setStatusTip(tr("Close the current bitmap, freeing the memory"));
-    connect(closeBitmapAct, &QAction::triggered, this, &MainWindow::closeBitmap);
+    connect(closeBitmapAct, &QAction::triggered, this, &PamViewWindow::closeBitmap);
 
     exitAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::WindowClose),
                             tr("&Exit program"), this);
     exitAct->setStatusTip(tr("Exit the window and close bitmaps"));
-    connect(exitAct, &QAction::triggered, this, &MainWindow::exit);
+    connect(exitAct, &QAction::triggered, this, &PamViewWindow::exit);
 
     undoAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::EditUndo),
                           tr("&Undo"), this);
     undoAct->setShortcuts(QKeySequence::Undo);
     undoAct->setStatusTip(tr("Undo the last operation"));
-    connect(undoAct, &QAction::triggered, this, &MainWindow::undo);
+    connect(undoAct, &QAction::triggered, this, &PamViewWindow::undo);
 
     // brightness
     transformBrightnessAct = new QAction(
         tr("&Brightness"),
         this);
     transformBrightnessAct->setStatusTip(tr("Adjust the image brightness"));
-    connect(transformBrightnessAct, &QAction::triggered, this, &MainWindow::transformBrightness);
+    connect(transformBrightnessAct, &QAction::triggered, this, &PamViewWindow::transformBrightness);
 
     // saturation
     transformSaturationAct = new QAction(
         tr("&Saturation"),
         this);
     transformSaturationAct->setStatusTip(tr("Adjust the image saturation"));
-    connect(transformSaturationAct, &QAction::triggered, this, &MainWindow::transformSaturation);
+    connect(transformSaturationAct, &QAction::triggered, this, &PamViewWindow::transformSaturation);
 
     // negative
     transformNegativeAct = new QAction(
         tr("&Negative"),
         this);
     transformNegativeAct->setStatusTip(tr("Invert the image colors"));
-    connect(transformNegativeAct, &QAction::triggered, this, &MainWindow::transformNegative);
+    connect(transformNegativeAct, &QAction::triggered, this, &PamViewWindow::transformNegative);
 
     // grayscale
     transformGrayscaleAct = new QAction(
         tr("&Grayscale"),
         this);
     transformGrayscaleAct->setStatusTip(tr("Make the image grayscale"));
-    connect(transformGrayscaleAct, &QAction::triggered, this, &MainWindow::transformGrayscale);
+    connect(transformGrayscaleAct, &QAction::triggered, this, &PamViewWindow::transformGrayscale);
 
     // black&white
     transformBlackAndWhiteAct = new QAction(
         tr("&Black and white"),
         this);
     transformBlackAndWhiteAct->setStatusTip(tr("Make the image black and white"));
-    connect(transformBlackAndWhiteAct, &QAction::triggered, this, &MainWindow::transformBlackAndWhite);
+    connect(transformBlackAndWhiteAct, &QAction::triggered, this, &PamViewWindow::transformBlackAndWhite);
 
     // DualBitmap toggles
     firstBitmapAct = new QAction(
         tr("&First"),
         this);
     firstBitmapAct->setStatusTip(tr("Switch to the first bitmap"));
-    connect(firstBitmapAct, &QAction::triggered, this, &MainWindow::setFirstBitmap);
+    connect(firstBitmapAct, &QAction::triggered, this, &PamViewWindow::setFirstBitmap);
 
     secondBitmapAct = new QAction(
         tr("&Second"),
         this);
     secondBitmapAct->setStatusTip(tr("Switch to the second bitmap"));
-    connect(secondBitmapAct, &QAction::triggered, this, &MainWindow::setSecondBitmap);
+    connect(secondBitmapAct, &QAction::triggered, this, &PamViewWindow::setSecondBitmap);
 
     propertiesAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
                            tr("&Properties"), this);
     propertiesAct->setStatusTip(tr("Show details about the current bitmap"));
-    connect(propertiesAct, &QAction::triggered, this, &MainWindow::bitmapDetails);
+    connect(propertiesAct, &QAction::triggered, this, &PamViewWindow::bitmapDetails);
 }
-void MainWindow::createMenus()
+void PamViewWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(openAct);
@@ -325,7 +325,7 @@ void MainWindow::createMenus()
     infoMenu->addAction(propertiesAct);
 }
 
-void MainWindow::renderCanvas() {
+void PamViewWindow::renderCanvas() {
     Bitmap* bitmap = getActiveBitmap();
     bool hasOpenBitmap = bitmap->hasOpenBitmap();
 
@@ -390,19 +390,19 @@ void MainWindow::renderCanvas() {
     }
 }
 
-void MainWindow::disableTopMenus() {
+void PamViewWindow::disableTopMenus() {
     fileMenu->setEnabled(false);
     editMenu->setEnabled(false);
     dualBitmapMenu->setEnabled(false);
 }
 
-void MainWindow::enableTopMenus() {
+void PamViewWindow::enableTopMenus() {
     fileMenu->setEnabled(true);
     editMenu->setEnabled(true);
     dualBitmapMenu->setEnabled(true);
 }
 
-void MainWindow::displayError(QString message) {
+void PamViewWindow::displayError(QString message) {
     QMessageBox::warning(
         this,
         tr("Error"),
@@ -410,7 +410,7 @@ void MainWindow::displayError(QString message) {
     );
 }
 
-void MainWindow::handleLoadExceptions() {
+void PamViewWindow::handleLoadExceptions() {
     try {
         throw;
     } catch (unsupported_format_exception) {
@@ -433,7 +433,7 @@ void MainWindow::handleLoadExceptions() {
     }
 }
 
-void MainWindow::handleSaveExceptions() {
+void PamViewWindow::handleSaveExceptions() {
     try {
         throw;
     } catch (unsupported_format_exception) {
@@ -447,13 +447,13 @@ void MainWindow::handleSaveExceptions() {
     }
 }
 
-void MainWindow::transformActiveBitmapAndRender(transformType transformFunction)
+void PamViewWindow::transformActiveBitmapAndRender(transformType transformFunction)
 {
     disableTopMenus();
 
     getActiveBitmap()->transformImage(
         transformFunction,
-        std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+        std::bind(&PamViewWindow::handleProgress, this, std::placeholders::_1)
     );
 
     enableTopMenus();
@@ -461,14 +461,14 @@ void MainWindow::transformActiveBitmapAndRender(transformType transformFunction)
     renderCanvas();
 }
 
-void MainWindow::transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level)
+void PamViewWindow::transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level)
 {
     disableTopMenus();
 
     getActiveBitmap()->transformImage(
         transformFunction,
         level,
-        std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+        std::bind(&PamViewWindow::handleProgress, this, std::placeholders::_1)
     );
 
     enableTopMenus();
@@ -476,7 +476,7 @@ void MainWindow::transformActiveBitmapAndRender(transformWithLevelType transform
     renderCanvas();
 }
 
-void MainWindow::showDialogAndSaveAs(FILETYPE filetype)
+void PamViewWindow::showDialogAndSaveAs(FILETYPE filetype)
 {
     auto filename = QFileDialog::getSaveFileName(
         this, tr("Save image"),
@@ -491,7 +491,7 @@ void MainWindow::showDialogAndSaveAs(FILETYPE filetype)
     try {
         getActiveBitmap()->saveToStream(
             stream, filetype,
-            std::bind(&MainWindow::handleProgress, this, std::placeholders::_1));
+            std::bind(&PamViewWindow::handleProgress, this, std::placeholders::_1));
     } catch (std::exception) {
         handleSaveExceptions();
     }
@@ -502,7 +502,7 @@ void MainWindow::showDialogAndSaveAs(FILETYPE filetype)
     }
 }
 
-void MainWindow::setActiveBitmap(DUAL_BITMAP desiredBitmap) {
+void PamViewWindow::setActiveBitmap(DUAL_BITMAP desiredBitmap) {
     int desiredBitmapNumber = (desiredBitmap == FIRST_BITMAP ? 1 : 2);
     if (desiredBitmapNumber != activeBitmapNumber) {
         activeBitmapNumber = desiredBitmapNumber;
@@ -518,11 +518,11 @@ void MainWindow::setActiveBitmap(DUAL_BITMAP desiredBitmap) {
     }
 }
 
-Bitmap* MainWindow::getActiveBitmap() {
+Bitmap* PamViewWindow::getActiveBitmap() {
     return (activeBitmapNumber == 1) ? bitmap1 : bitmap2;
 }
 
-void MainWindow::setupNoBitmapOpenWidget()
+void PamViewWindow::setupNoBitmapOpenWidget()
 {
     noBitmapOpenWidget = new QWidget;
 
@@ -543,7 +543,7 @@ void MainWindow::setupNoBitmapOpenWidget()
     noBitmapOpenWidget->setLayout(noBitmapOpenLayout);
 }
 
-void MainWindow::handleProgress(int progress)
+void PamViewWindow::handleProgress(int progress)
 {
     if (progress == 100) {
         statusBar()->clearMessage();

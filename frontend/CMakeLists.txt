@@ -9,7 +9,7 @@ qt_standard_project_setup()
 
 qt_add_executable(pamview_qt
     main.cpp
-    mainwindow.cpp mainwindow.h
+    pamview_window.cpp pamview_window.h
     zoomablecanvas.cpp zoomablecanvas.h
     sliderdialog.cpp sliderdialog.h
 )

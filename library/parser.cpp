@@ -105,11 +105,13 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
 {
     if (!bitmap.hasOpenBitmap())
         throw no_bitmap_open_exception("No bitmap was open when trying to save");
-    if (filetype == P3)
+    if (filetype == P3 || filetype == P6)
     {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         long pixelCount = width * height;
+
+        int pNumber = (filetype - P1) + 1;
 
         if (pixelCount > MAX_PIXELS)
             throw too_large_exception("Bitmap's pixel count too large");
@@ -118,7 +120,7 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
             progressHandler(0);
 
         stream
-            << "P3" << '\n'
+            << "P" << pNumber << '\n'
             << "# Created with PamView" << '\n'
             << width << ' ' << height << '\n'
             << 255 << '\n';
@@ -133,10 +135,14 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
                     progressHandler(pixelNum / (float)pixelCount * 100);
 
                 Pixel pixel = bitmap.getPixelAtFast(x, y);
-                stream
-                    << (int)pixel.r << '\n'
-                    << (int)pixel.g << '\n'
-                    << (int)pixel.b << '\n';
+
+                if (filetype == P3) {
+                  stream << (int)pixel.r << '\n'
+                         << (int)pixel.g << '\n'
+                         << (int)pixel.b << '\n';
+                } else if (filetype == P6) {
+                  stream << pixel.r << pixel.g << pixel.b;
+                }
             }
         }
 

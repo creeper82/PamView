@@ -29,7 +29,7 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, std::function<vo
     if (width < 1 || height < 1)
         throw bad_dimensions_exception("Width or height was less than 1");
     if (pixelCount > MAX_PIXELS)
-        throw bad_dimensions_exception("Exceeded maximum supported pixel count");
+        throw too_large_exception("Exceeded maximum supported pixel count");
 
     if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6")
     {

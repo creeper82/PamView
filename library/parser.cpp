@@ -225,9 +225,9 @@ Pixel Parser::readPixel(std::istream &stream, FILETYPE filetype)
     }
     else if (filetype == P2)
     {
-        uint8_t value;
+        int value;
         stream >> value;
-        r = g = b = value;
+        r = g = b = (uint8_t)value;
     }
     else if (filetype == P4)
     {
@@ -236,7 +236,7 @@ Pixel Parser::readPixel(std::istream &stream, FILETYPE filetype)
     }
     else if (filetype == P1)
     {
-        uint8_t value;
+        int value;
         stream >> value;
         r = g = b = (value == 1 ? 255 : 0);
     }

@@ -1,5 +1,6 @@
 #include "bitmap.h"
 #include "parser.h"
+#include <functional>
 #define MAX_PIXELS 100000000
 #define PROGRESS_BAR_UPDATE_TRESHOLD 10000
 
@@ -30,6 +31,11 @@ Pixel Bitmap::getPixelAt(int x, int y)
     return map[x][y];
 }
 
+Pixel Bitmap::getPixelAtFast(int x, int y)
+{
+    return map[x][y];
+}
+
 bool Bitmap::setPixelAt(int x, int y, Pixel newPixel, bool skipCommit)
 {
     if (!hasPoint(x, y) || !hasOpenBitmap())
@@ -38,6 +44,11 @@ bool Bitmap::setPixelAt(int x, int y, Pixel newPixel, bool skipCommit)
         commitPreChange();
     map[x][y] = newPixel;
     return true;
+}
+
+void Bitmap::setPixelAtFast(int x, int y, Pixel newPixel)
+{
+    map[x][y] = newPixel;
 }
 
 void Bitmap::createBlank(int newWidth, int newHeight, Pixel defaultFill)
@@ -98,6 +109,8 @@ void Bitmap::freePreviousBitmapStateMemory()
         }
 
         delete[] previousBitmapState->map;
+
+        previousBitmapState->map = nullptr;
     }
 }
 
@@ -160,18 +173,18 @@ void Bitmap::closeBitmap()
     freePreviousBitmapStateMemory();
 }
 
-void Bitmap::openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent))
+void Bitmap::openFromStream(std::istream &stream, progressHandlerType progressHandler)
 {
     clearUndoHistory();
     Parser::loadToBitmap(*this, stream, progressHandler);
 }
 
-void Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+void Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, progressHandlerType progressHandler)
 {
     Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
 }
 
-void Bitmap::transformImage(Pixel (*transformFunction)(Pixel), void (*progressHandler)(int))
+void Bitmap::transformImage(transformType transformFunction, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {
@@ -198,7 +211,7 @@ void Bitmap::transformImage(Pixel (*transformFunction)(Pixel), void (*progressHa
     }
 }
 
-void Bitmap::transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int level, void (*progressHandler)(int))
+void Bitmap::transformImage(transformWithLevelType transformFunctionWithLevel, int level, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {

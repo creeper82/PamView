@@ -1,7 +1,13 @@
 #pragma once
+#include <functional>
 #include <iostream>
 #include <optional>
 #include "pixel.h"
+
+typedef std::function<void(int)> progressHandlerType;
+
+typedef std::function<Pixel(Pixel)> transformType;
+typedef std::function<Pixel(Pixel, int)> transformWithLevelType;
 
 // Represents the Portable AnyMap variant (P-number)
 enum FILETYPE
@@ -57,7 +63,13 @@ class Bitmap {
         // Returns the pixel at given coordinantes.
         Pixel getPixelAt(int x, int y);
 
+        // Returns the pixel at given coordinantes, used for internal purposes. Skips a lot of checks.
+        Pixel getPixelAtFast(int x, int y);
+
         bool setPixelAt(int x, int y, Pixel newPixel, bool skipCommit = false);
+
+        // Quick pixel set, used for internal purposes. Skips a lot of checks.
+        void setPixelAtFast(int x, int y, Pixel newPixel);
 
         // Updates the bitmap dimensions and clears the bitmap, with possibility to select a fill color. Overrides existing bitmap and clears the undo history.
         void createBlank(int width, int height, Pixel defaultFill = Pixel());
@@ -69,16 +81,16 @@ class Bitmap {
         void closeBitmap();
 
         // Reads the bitmap file from stream and overrides the current image.
-        void openFromStream(std::istream &stream, void (*progressHandler)(int progressPercent) = nullptr);
+        void openFromStream(std::istream &stream, progressHandlerType progressHandler = nullptr);
 
         // Saves the PPM bitmap to a stream, based on given filetype (P-number).
-        void saveToStream(std::ostream &stream, FILETYPE filetype = P3, void (*progressHandler)(int) = nullptr);
+        void saveToStream(std::ostream &stream, FILETYPE filetype = P3, progressHandlerType progressHandler = nullptr);
 
         // Transforms the image based on given transformation function.
-        void transformImage(Pixel (*transformFunction)(Pixel), void(*progressHandler)(int) = nullptr);
+        void transformImage(transformType, progressHandlerType progressHandler = nullptr);
 
         // Transforms the image based on given transformation function and strength/level of the transformation.
-        void transformImage(Pixel (*transformFunctionWithLevel)(Pixel, int), int, void (*progressHandler)(int) = nullptr);
+        void transformImage(transformWithLevelType, int, progressHandlerType progressHandler = nullptr);
 
         // Undo the last change, and load previous bitmap state, if exists. Related: canUndo()
         void undoLastChange();
@@ -91,6 +103,9 @@ class Bitmap {
 
         // Creates an empty bitmap of given dimensions, with possibility to set a default color.
         Bitmap(int initialWidth, int initialHeight, Pixel defaultFill = Pixel());
+
+        Bitmap(const Bitmap&) = delete;
+        Bitmap& operator=(const Bitmap&) = delete;
 
         ~Bitmap();
     private:

@@ -32,16 +32,29 @@ namespace PixelTransformations
         return pixel;
     }
 
-    Pixel saturation(Pixel pixel, int level)
-    {
+        Pixel saturation(Pixel pixel, int level)
+        {
+            if (pixel.r == pixel.g && pixel.g == pixel.b) return pixel;
+
         HSVColor hsv = Conversions::RGBToHSV(pixel);
+
         hsv.saturation += ((float)level / 100);
+
         if (hsv.saturation < 0)
             hsv.saturation = 0;
+
         if (hsv.saturation > 1)
             hsv.saturation = 1;
+
         RGBColor rgb = Conversions::HSVToRGB(hsv);
         Pixel saturated = Pixel(rgb.r, rgb.g, rgb.b);
         return saturated;
+    }
+
+    Pixel blacknwhite(Pixel pixel)
+    {
+        int luminance = 0.3*pixel.r + 0.587*pixel.g + 0.114*pixel.b;
+        if (luminance > 127) return Pixel(255, 255, 255);
+        else return Pixel(0, 0, 0);
     }
 }

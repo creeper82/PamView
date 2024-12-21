@@ -7,7 +7,7 @@
 // #define PARSE_NUM_FAILED std::invalid_argument("Failed to parse a number. File is corrupt")
 // #define STREAM_CORRUPT_EXCEPTION std::invalid_argument("Stream is corrupt. Fatal error reading the data")
 
-void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressHandler)(int))
+void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, std::function<void(int)> progressHandler)
 {
     std::string pNumber;
     FILETYPE filetype;
@@ -29,7 +29,7 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressH
     if (width < 1 || height < 1)
         throw bad_dimensions_exception("Width or height was less than 1");
     if (pixelCount > MAX_PIXELS)
-        throw bad_dimensions_exception("Exceeded maximum supported pixel count");
+        throw too_large_exception("Exceeded maximum supported pixel count");
 
     if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6")
     {
@@ -39,19 +39,18 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressH
         if (maxValue != 255 && maxValue != 1)
             throw unsupported_maxvalue_exception("This bitmap's color maxvalue is not supported");
 
+        // Read all at once for binary files
+        if (filetype > P3) {
+          bytesPerPixel = (filetype == P6 ? 3 : 1);
+          rawInput = new char[pixelCount * bytesPerPixel];
+          stream.read(rawInput, pixelCount * bytesPerPixel);
+          throwExceptions(stream);
+        }
+
         bitmap.createBlank(width, height);
 
         if (progressHandler)
             progressHandler(0);
-
-        // Read all at once for binary files
-        if (filetype > P3)
-        {
-            bytesPerPixel = (filetype == P6 ? 3 : 1);
-            rawInput = new char[pixelCount * bytesPerPixel];
-            stream.read(rawInput, pixelCount * bytesPerPixel);
-            throwExceptions(stream);
-        }
 
         int pixelNum = 0;
         for (int y = 0; y < height; y++)
@@ -64,33 +63,28 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressH
 
                 if (filetype == P6)
                 {
-                    bitmap.setPixelAt(x, y,
-                                      Pixel(
-                                          rawInput[pixelNum * bytesPerPixel],
-                                          rawInput[pixelNum * bytesPerPixel + 1],
-                                          rawInput[pixelNum * bytesPerPixel + 2]),
-                                      true);
+                    bitmap.setPixelAtFast(x, y,
+                        Pixel(
+                            rawInput[pixelNum * bytesPerPixel],
+                            rawInput[pixelNum * bytesPerPixel + 1],
+                            rawInput[pixelNum * bytesPerPixel + 2]
+                        )
+                    );
                 }
                 else if (filetype == P5)
                 {
                     uint8_t value = rawInput[pixelNum * bytesPerPixel];
 
-                    bitmap.setPixelAt(x, y,
-                                      Pixel(
-                                          value, value, value),
-                                      true);
+                    bitmap.setPixelAtFast(x, y, Pixel(value, value, value));
                 }
                 else if (filetype == P4)
                 {
                     uint8_t value = rawInput[pixelNum * bytesPerPixel] == 1 ? 255 : 0;
-                    bitmap.setPixelAt(x, y,
-                                      Pixel(
-                                          value, value, value),
-                                      true);
+                    bitmap.setPixelAtFast(x, y, Pixel(value, value, value));
                 }
                 else
                 {
-                    bitmap.setPixelAt(x, y, readPixel(stream, filetype), true);
+                    bitmap.setPixelAtFast(x, y, readPixel(stream, filetype));
                 }
             }
         }
@@ -107,15 +101,17 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, void (*progressH
     }
 }
 
-void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, void (*progressHandler)(int))
+void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetype, std::function<void(int)> progressHandler)
 {
     if (!bitmap.hasOpenBitmap())
         throw no_bitmap_open_exception("No bitmap was open when trying to save");
-    if (filetype == P3)
+    if (filetype == P3 || filetype == P6)
     {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         long pixelCount = width * height;
+
+        int pNumber = (filetype - P1) + 1;
 
         if (pixelCount > MAX_PIXELS)
             throw too_large_exception("Bitmap's pixel count too large");
@@ -124,7 +120,7 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
             progressHandler(0);
 
         stream
-            << "P3" << '\n'
+            << "P" << pNumber << '\n'
             << "# Created with PamView" << '\n'
             << width << ' ' << height << '\n'
             << 255 << '\n';
@@ -138,11 +134,15 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
                 if (progressHandler && pixelNum % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
                     progressHandler(pixelNum / (float)pixelCount * 100);
 
-                Pixel pixel = bitmap.getPixelAt(x, y);
-                stream
-                    << (int)pixel.r << '\n'
-                    << (int)pixel.g << '\n'
-                    << (int)pixel.b << '\n';
+                Pixel pixel = bitmap.getPixelAtFast(x, y);
+
+                if (filetype == P3) {
+                  stream << (int)pixel.r << '\n'
+                         << (int)pixel.g << '\n'
+                         << (int)pixel.b << '\n';
+                } else if (filetype == P6) {
+                  stream << pixel.r << pixel.g << pixel.b;
+                }
             }
         }
 
@@ -200,37 +200,45 @@ char Parser::readRawChar(std::istream &stream)
 Pixel Parser::readPixel(std::istream &stream, FILETYPE filetype)
 {
     uint8_t r, g, b;
+
     if (filetype == P6)
     {
         r = readRawChar(stream);
         g = readRawChar(stream);
         b = readRawChar(stream);
     }
-    if (filetype == P3)
+    else if (filetype == P3)
     {
-        r = readIntSkipComment(stream);
-        g = readIntSkipComment(stream);
-        b = readIntSkipComment(stream);
+        int ir, ig, ib;
+
+        stream >> ir;
+        stream >> ig;
+        stream >> ib;
+
+        r = ir;
+        g = ig;
+        b = ib;
     }
-    if (filetype == P5)
+    else if (filetype == P5)
     {
-        uint8_t value = readRawChar(stream);
+        r = g = b = stream.get();
+    }
+    else if (filetype == P2)
+    {
+        uint8_t value;
+        stream >> value;
         r = g = b = value;
     }
-    if (filetype == P2)
-    {
-        uint8_t value = readIntSkipComment(stream);
-        r = g = b = value;
-    }
-    if (filetype == P4)
+    else if (filetype == P4)
     {
         uint8_t value = (readRawChar(stream) == 1 ? 255 : 0);
         r = g = b = value;
     }
-    if (filetype == P1)
+    else if (filetype == P1)
     {
-        uint8_t value = (readIntSkipComment(stream) == 1 ? 255 : 0);
-        r = g = b = value;
+        uint8_t value;
+        stream >> value;
+        r = g = b = (value == 1 ? 255 : 0);
     }
 
     return Pixel(r, g, b);
@@ -248,6 +256,6 @@ void Parser::throwExceptions(std::istream &stream)
 
 void Parser::consumeEmptyLines(std::istream &stream)
 {
-    while (stream.peek() == '\n')
+    while (stream.peek() == '\n' || stream.peek() == '\r')
         stream.get();
 }

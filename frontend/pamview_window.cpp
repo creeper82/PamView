@@ -36,7 +36,7 @@ PamViewWindow::PamViewWindow(Bitmap* initialBitmap) {
 
     setWindowTitle(tr("PAMview"));
     setMinimumSize(160, 160);
-    resize(480, 320);
+    resize(960, 640);
 
     setCentralWidget(stackedWidget);
 

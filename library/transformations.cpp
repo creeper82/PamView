@@ -32,14 +32,20 @@ namespace PixelTransformations
         return pixel;
     }
 
-    Pixel saturation(Pixel pixel, int level)
-    {
+        Pixel saturation(Pixel pixel, int level)
+        {
+            if (pixel.r == pixel.g && pixel.g == pixel.b) return pixel;
+
         HSVColor hsv = Conversions::RGBToHSV(pixel);
+
         hsv.saturation += ((float)level / 100);
+
         if (hsv.saturation < 0)
             hsv.saturation = 0;
+
         if (hsv.saturation > 1)
             hsv.saturation = 1;
+
         RGBColor rgb = Conversions::HSVToRGB(hsv);
         Pixel saturated = Pixel(rgb.r, rgb.g, rgb.b);
         return saturated;

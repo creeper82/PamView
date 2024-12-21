@@ -49,7 +49,7 @@ private slots:
     void transformBlackAndWhite();
     void setFirstBitmap();
     void setSecondBitmap();
-    void about();
+    void bitmapDetails();
 private:
     void createActions();
     void createMenus();
@@ -74,7 +74,7 @@ private:
     QMenu *editMenu;
     QMenu *transformMenu;
     QMenu *dualBitmapMenu;
-    QMenu *helpMenu;
+    QMenu *infoMenu;
     QAction *openAct;
     QAction *saveP3Act;
     QAction *saveP6Act;
@@ -89,7 +89,7 @@ private:
     QAction *transformBlackAndWhiteAct;
     QAction *firstBitmapAct;
     QAction *secondBitmapAct;
-    QAction *aboutAct;
+    QAction *propertiesAct;
     QStackedWidget* stackedWidget = nullptr;
     QWidget *noBitmapOpenWidget = nullptr;
     QLabel *noBitmapLabel = nullptr;

@@ -54,7 +54,7 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu(this);
     menu.addAction(openAct);
     menu.addMenu(saveMenu);
-    menu.addAction(aboutAct);
+    menu.addAction(propertiesAct);
     menu.exec(event->globalPos());
 }
 #endif
@@ -180,7 +180,7 @@ void MainWindow::setSecondBitmap() {
     setActiveBitmap(SECOND_BITMAP);
 }
 
-void MainWindow::about()
+void MainWindow::bitmapDetails()
 {
     int width = getActiveBitmap()->getWidth();
     int height = getActiveBitmap()->getHeight();
@@ -289,10 +289,10 @@ void MainWindow::createActions()
     secondBitmapAct->setStatusTip(tr("Switch to the second bitmap"));
     connect(secondBitmapAct, &QAction::triggered, this, &MainWindow::setSecondBitmap);
 
-    aboutAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
-                           tr("&About"), this);
-    aboutAct->setStatusTip(tr("Show the bitmap information"));
-    connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
+    propertiesAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
+                           tr("&Properties"), this);
+    propertiesAct->setStatusTip(tr("Show details about the current bitmap"));
+    connect(propertiesAct, &QAction::triggered, this, &MainWindow::bitmapDetails);
 }
 void MainWindow::createMenus()
 {
@@ -321,8 +321,8 @@ void MainWindow::createMenus()
     dualBitmapMenu->addAction(firstBitmapAct);
     dualBitmapMenu->addAction(secondBitmapAct);
 
-    helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpMenu->addAction(aboutAct);
+    infoMenu = menuBar()->addMenu(tr("&Info"));
+    infoMenu->addAction(propertiesAct);
 }
 
 void MainWindow::renderCanvas() {

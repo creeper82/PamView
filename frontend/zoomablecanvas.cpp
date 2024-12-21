@@ -1,10 +1,10 @@
-#include <QtWidgets>
 #include "zoomablecanvas.h"
+#include <QtWidgets>
 
 ZoomableCanvas::ZoomableCanvas(QWidget *parent) : QGraphicsView(parent) {
-    setRenderHint(QPainter::Antialiasing, false);
-    setDragMode(QGraphicsView::ScrollHandDrag);
-    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+  setRenderHint(QPainter::Antialiasing, false);
+  setDragMode(QGraphicsView::ScrollHandDrag);
+  setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 }
 
 void ZoomableCanvas::wheelEvent(QWheelEvent *event) {

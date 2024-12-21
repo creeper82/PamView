@@ -6,15 +6,11 @@
 
 #include "pamview_window.h"
 
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
-    
-    PamViewWindow window;
-    
-    window.show();
-    return app.exec();
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
+
+  PamViewWindow window;
+
+  window.show();
+  return app.exec();
 }
-
-
-

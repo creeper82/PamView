@@ -101,8 +101,14 @@ void MainWindow::save()
         std::ofstream stream(filename.toStdString());
 
         disableTopMenus();
+        
+        try {
+           getActiveBitmap()->saveToStream(stream, P6, std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)); 
+        }
+        catch (std::exception) {
 
-        getActiveBitmap()->saveToStream(stream, P3, std::bind(&MainWindow::handleProgress, this, std::placeholders::_1));
+        }
+        
 
         enableTopMenus();
 
@@ -400,6 +406,20 @@ void MainWindow::handleLoadExceptions() {
         displayError(tr("Could not load the bitmap. File may be corrupt"));
     }
     catch (std::exception) {
+        displayError(tr("Unrecognized error occured. Operation failed."));
+    }
+}
+
+void MainWindow::handleSaveExceptions() {
+    try {
+        throw;
+    } catch (unsupported_format_exception) {
+        displayError(tr("Can't save to this format."));
+    } catch (too_large_exception) {
+        displayError(tr("The bitmap is too large to be saved."));
+    } catch (no_bitmap_open_exception) {
+        displayError(tr("No bitmap was open when trying to save."));
+    } catch (std::exception) {
         displayError(tr("Unrecognized error occured. Operation failed."));
     }
 }

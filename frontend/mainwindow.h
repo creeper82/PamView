@@ -56,6 +56,7 @@ private:
     void enableTopMenus();
     void displayError(QString message);
     void handleLoadExceptions();
+    void handleSaveExceptions();
     void transformActiveBitmapAndRender(transformType transformFunction);
     void transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level);
     void setupNoBitmapOpenWidget();

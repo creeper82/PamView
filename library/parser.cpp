@@ -39,19 +39,18 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, std::function<vo
         if (maxValue != 255 && maxValue != 1)
             throw unsupported_maxvalue_exception("This bitmap's color maxvalue is not supported");
 
+        // Read all at once for binary files
+        if (filetype > P3) {
+          bytesPerPixel = (filetype == P6 ? 3 : 1);
+          rawInput = new char[pixelCount * bytesPerPixel];
+          stream.read(rawInput, pixelCount * bytesPerPixel);
+          throwExceptions(stream);
+        }
+
         bitmap.createBlank(width, height);
 
         if (progressHandler)
             progressHandler(0);
-
-        // Read all at once for binary files
-        if (filetype > P3)
-        {
-            bytesPerPixel = (filetype == P6 ? 3 : 1);
-            rawInput = new char[pixelCount * bytesPerPixel];
-            stream.read(rawInput, pixelCount * bytesPerPixel);
-            throwExceptions(stream);
-        }
 
         int pixelNum = 0;
         for (int y = 0; y < height; y++)

@@ -6,6 +6,7 @@
 #include <functional>
 #include <fstream>
 #include "mainwindow.h"
+#include "bitmap.h"
 #include "exceptions.h"
 #include "transformations.h"
 #include "zoomablecanvas.h"
@@ -52,7 +53,7 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu(this);
     menu.addAction(openAct);
-    menu.addAction(saveAct);
+    menu.addMenu(saveMenu);
     menu.addAction(aboutAct);
     menu.exec(event->globalPos());
 }
@@ -89,31 +90,38 @@ void MainWindow::open()
     
 }
 
-void MainWindow::save()
+void MainWindow::saveP3()
 {
-    auto filename = QFileDialog::getSaveFileName(
-        this, tr("Save image"),
-        QStandardPaths::writableLocation(QStandardPaths::PicturesLocation),
-        tr("Portable anymap (*.pbm *.pgm *.ppm)")
+    showDialogAndSaveAs(P3);
+}
+
+void MainWindow::saveP6()
+{
+    showDialogAndSaveAs(P6);
+}
+
+void MainWindow::saveHelp()
+{
+    QMessageBox::about(
+        this,
+        tr("File formats"),
+        tr(
+            "You can save the bitmap either in a raw format or ASCII format.<br><br>"
+
+            "<b>ASCII (P3)</b>:<br>"
+            "- larger filesize (up to 3x)<br>"
+            "- human readable RGB values<br>"
+            "- slightly slower<br><br>"
+
+            "<b>Binary / raw (P6)</b>:<br>"
+            "- smaller filesize<br>"
+            "- human ureadable values (no visible RGB numbers)<br>"
+            "- fastest<br><br>"
+
+            "Both are PPM (portable pixmap) formats, "
+            "meaning they store pixels as 24-bit RGB, aka truecolor."
+        )
     );
-
-    if (!filename.isEmpty()) {
-        std::ofstream stream(filename.toStdString());
-
-        disableTopMenus();
-        
-        try {
-           getActiveBitmap()->saveToStream(stream, P6, std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)); 
-        }
-        catch (std::exception) {
-
-        }
-        
-
-        enableTopMenus();
-
-        statusBar()->showMessage("File saved!");
-    }
 }
 
 void MainWindow::closeBitmap() {
@@ -202,11 +210,20 @@ void MainWindow::createActions()
     openAct->setStatusTip(tr("Open an existing bitmap"));
     connect(openAct, &QAction::triggered, this, &MainWindow::open);
 
-    saveAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentSave),
-                          tr("&Save"), this);
-    saveAct->setShortcuts(QKeySequence::Save);
-    saveAct->setStatusTip(tr("Save the bitmap to disk"));
-    connect(saveAct, &QAction::triggered, this, &MainWindow::save);
+    saveP3Act = new QAction(tr("&ASCII"), this);
+    saveP3Act->setStatusTip(tr("Save in a P3 format (ASCII)"));
+    connect(saveP3Act, &QAction::triggered, this, &MainWindow::saveP3);
+
+    saveP6Act = new QAction(tr("&Binary (raw)"), this);
+    saveP6Act->setShortcuts(QKeySequence::Save);
+    saveP6Act->setStatusTip(tr("Save in a P6 format (binary / raw)"));
+    connect(saveP6Act, &QAction::triggered, this, &MainWindow::saveP6);
+
+    saveHelpAct = new QAction(
+        QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
+        tr("&How to pick"), this);
+    saveHelpAct->setStatusTip(tr("Display the save help menu"));
+    connect(saveHelpAct, &QAction::triggered, this, &MainWindow::saveHelp);
 
     closeBitmapAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::EditClear),
                             tr("&Close bitmap"), this);
@@ -281,10 +298,14 @@ void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(openAct);
-    fileMenu->addAction(saveAct);
+    saveMenu = fileMenu->addMenu("&Save as");
     fileMenu->addAction(closeBitmapAct);
     fileMenu->addAction(exitAct);
     fileMenu->addSeparator();
+
+    saveMenu->addAction(saveP3Act);
+    saveMenu->addAction(saveP6Act);
+    saveMenu->addAction(saveHelpAct);
     
     editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(undoAct);
@@ -309,7 +330,7 @@ void MainWindow::renderCanvas() {
     bool hasOpenBitmap = bitmap->hasOpenBitmap();
 
     closeBitmapAct->setEnabled(hasOpenBitmap);
-    saveAct->setEnabled(hasOpenBitmap);
+    saveMenu->setEnabled(hasOpenBitmap);
     undoAct->setEnabled(hasOpenBitmap && bitmap->canUndo());
 
     transformMenu->setEnabled(hasOpenBitmap);
@@ -451,6 +472,32 @@ void MainWindow::transformActiveBitmapAndRender(transformWithLevelType transform
     enableTopMenus();
     
     renderCanvas();
+}
+
+void MainWindow::showDialogAndSaveAs(FILETYPE filetype)
+{
+    auto filename = QFileDialog::getSaveFileName(
+        this, tr("Save image"),
+        QStandardPaths::writableLocation(QStandardPaths::PicturesLocation),
+        tr("Portable anymap (*.ppm)"));
+
+    if (!filename.isEmpty()) {
+    std::ofstream stream(filename.toStdString());
+
+    disableTopMenus();
+
+    try {
+        getActiveBitmap()->saveToStream(
+            stream, filetype,
+            std::bind(&MainWindow::handleProgress, this, std::placeholders::_1));
+    } catch (std::exception) {
+        handleSaveExceptions();
+    }
+
+    enableTopMenus();
+
+    statusBar()->showMessage("File saved!");
+    }
 }
 
 void MainWindow::setActiveBitmap(DUAL_BITMAP desiredBitmap) {

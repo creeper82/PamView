@@ -36,7 +36,9 @@ protected:
 #endif
 private slots:
     void open();
-    void save();
+    void saveP3();
+    void saveP6();
+    void saveHelp();
     void closeBitmap();
     void exit();
     void undo();
@@ -59,6 +61,7 @@ private:
     void handleSaveExceptions();
     void transformActiveBitmapAndRender(transformType transformFunction);
     void transformActiveBitmapAndRender(transformWithLevelType transformFunction, int level);
+    void showDialogAndSaveAs(FILETYPE filetype);
     void setupNoBitmapOpenWidget();
     void handleProgress(int progress);
     void setActiveBitmap(DUAL_BITMAP bitmap);
@@ -67,12 +70,15 @@ private:
     Bitmap* bitmap1;
     Bitmap* bitmap2;
     QMenu *fileMenu;
+    QMenu *saveMenu;
     QMenu *editMenu;
     QMenu *transformMenu;
     QMenu *dualBitmapMenu;
     QMenu *helpMenu;
     QAction *openAct;
-    QAction *saveAct;
+    QAction *saveP3Act;
+    QAction *saveP6Act;
+    QAction *saveHelpAct;
     QAction *closeBitmapAct;
     QAction *exitAct;
     QAction *undoAct;

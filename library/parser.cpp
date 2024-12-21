@@ -29,7 +29,7 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, std::function<vo
     if (width < 1 || height < 1)
         throw bad_dimensions_exception("Width or height was less than 1");
     if (pixelCount > MAX_PIXELS)
-        throw bad_dimensions_exception("Exceeded maximum supported pixel count");
+        throw too_large_exception("Exceeded maximum supported pixel count");
 
     if (pNumber == "P1" || pNumber == "P2" || pNumber == "P3" || pNumber == "P4" || pNumber == "P5" || pNumber == "P6")
     {
@@ -39,19 +39,18 @@ void Parser::loadToBitmap(Bitmap &bitmap, std::istream &stream, std::function<vo
         if (maxValue != 255 && maxValue != 1)
             throw unsupported_maxvalue_exception("This bitmap's color maxvalue is not supported");
 
+        // Read all at once for binary files
+        if (filetype > P3) {
+          bytesPerPixel = (filetype == P6 ? 3 : 1);
+          rawInput = new char[pixelCount * bytesPerPixel];
+          stream.read(rawInput, pixelCount * bytesPerPixel);
+          throwExceptions(stream);
+        }
+
         bitmap.createBlank(width, height);
 
         if (progressHandler)
             progressHandler(0);
-
-        // Read all at once for binary files
-        if (filetype > P3)
-        {
-            bytesPerPixel = (filetype == P6 ? 3 : 1);
-            rawInput = new char[pixelCount * bytesPerPixel];
-            stream.read(rawInput, pixelCount * bytesPerPixel);
-            throwExceptions(stream);
-        }
 
         int pixelNum = 0;
         for (int y = 0; y < height; y++)
@@ -106,11 +105,13 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
 {
     if (!bitmap.hasOpenBitmap())
         throw no_bitmap_open_exception("No bitmap was open when trying to save");
-    if (filetype == P3)
+    if (filetype == P3 || filetype == P6)
     {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         long pixelCount = width * height;
+
+        int pNumber = (filetype - P1) + 1;
 
         if (pixelCount > MAX_PIXELS)
             throw too_large_exception("Bitmap's pixel count too large");
@@ -119,7 +120,7 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
             progressHandler(0);
 
         stream
-            << "P3" << '\n'
+            << "P" << pNumber << '\n'
             << "# Created with PamView" << '\n'
             << width << ' ' << height << '\n'
             << 255 << '\n';
@@ -134,10 +135,14 @@ void Parser::saveBitmapTo(Bitmap &bitmap, std::ostream &stream, FILETYPE filetyp
                     progressHandler(pixelNum / (float)pixelCount * 100);
 
                 Pixel pixel = bitmap.getPixelAtFast(x, y);
-                stream
-                    << (int)pixel.r << '\n'
-                    << (int)pixel.g << '\n'
-                    << (int)pixel.b << '\n';
+
+                if (filetype == P3) {
+                  stream << (int)pixel.r << '\n'
+                         << (int)pixel.g << '\n'
+                         << (int)pixel.b << '\n';
+                } else if (filetype == P6) {
+                  stream << pixel.r << pixel.g << pixel.b;
+                }
             }
         }
 

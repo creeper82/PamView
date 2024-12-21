@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <QtWidgets>
+#include <exception>
 #include <functional>
 #include <fstream>
 #include "mainwindow.h"
+#include "exceptions.h"
 #include "transformations.h"
 #include "zoomablecanvas.h"
 #include "sliderdialog.h"
@@ -69,10 +71,15 @@ void MainWindow::open()
 
         disableTopMenus();
 
-        getActiveBitmap()->openFromStream(
-            stream,
-            std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
-        );
+        try {
+            getActiveBitmap()->openFromStream(
+                stream,
+                std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)
+            );
+        }
+        catch (std::exception) {
+            handleLoadExceptions();
+        }
 
         enableTopMenus();
 
@@ -94,8 +101,14 @@ void MainWindow::save()
         std::ofstream stream(filename.toStdString());
 
         disableTopMenus();
+        
+        try {
+           getActiveBitmap()->saveToStream(stream, P6, std::bind(&MainWindow::handleProgress, this, std::placeholders::_1)); 
+        }
+        catch (std::exception) {
 
-        getActiveBitmap()->saveToStream(stream, P3, std::bind(&MainWindow::handleProgress, this, std::placeholders::_1));
+        }
+        
 
         enableTopMenus();
 
@@ -364,6 +377,51 @@ void MainWindow::enableTopMenus() {
     fileMenu->setEnabled(true);
     editMenu->setEnabled(true);
     dualBitmapMenu->setEnabled(true);
+}
+
+void MainWindow::displayError(QString message) {
+    QMessageBox::warning(
+        this,
+        tr("Error"),
+        message
+    );
+}
+
+void MainWindow::handleLoadExceptions() {
+    try {
+        throw;
+    } catch (unsupported_format_exception) {
+        displayError(tr("This bitmap format (P-number) is not supported."));
+    }
+    catch (too_large_exception) {
+        displayError(tr("The bitmap is too large! Exceeded 100 000 000 pixels."));
+    }
+    catch (bad_dimensions_exception) {
+        displayError(tr("The bitmap has invalid dimensions"));
+    }
+    catch (unsupported_maxvalue_exception) {
+        displayError(tr("This bitmap maxvalue is not yet supported."));
+    }
+    catch (stream_corrupt_exception) {
+        displayError(tr("Could not load the bitmap. File may be corrupt"));
+    }
+    catch (std::exception) {
+        displayError(tr("Unrecognized error occured. Operation failed."));
+    }
+}
+
+void MainWindow::handleSaveExceptions() {
+    try {
+        throw;
+    } catch (unsupported_format_exception) {
+        displayError(tr("Can't save to this format."));
+    } catch (too_large_exception) {
+        displayError(tr("The bitmap is too large to be saved."));
+    } catch (no_bitmap_open_exception) {
+        displayError(tr("No bitmap was open when trying to save."));
+    } catch (std::exception) {
+        displayError(tr("Unrecognized error occured. Operation failed."));
+    }
 }
 
 void MainWindow::transformActiveBitmapAndRender(transformType transformFunction)

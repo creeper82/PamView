@@ -1,4 +1,5 @@
 #include "bitmap.h"
+#include "exceptions.h"
 #include "parser.h"
 #include <functional>
 #define MAX_PIXELS 100000000
@@ -184,7 +185,7 @@ void Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, progressHandl
     Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
 }
 
-void Bitmap::transformImage(transformType transformFunction, progressHandlerType progressHandler)
+void Bitmap::transformImage(pixelTransformFunction transformFunction, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {
@@ -211,7 +212,7 @@ void Bitmap::transformImage(transformType transformFunction, progressHandlerType
     }
 }
 
-void Bitmap::transformImage(transformWithLevelType transformFunctionWithLevel, int level, progressHandlerType progressHandler)
+void Bitmap::transformImage(pixelTransformWithLevelFunction transformFunctionWithLevel, int level, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {
@@ -278,4 +279,43 @@ Bitmap::Bitmap(int initialWidth, int initialHeight, Pixel defaultFill)
 Bitmap::~Bitmap()
 {
     closeBitmap();
+}
+
+Bitmap* Bitmap::combineBitmaps(Bitmap *b1, Bitmap *b2, pixelCombinationFunction combinationFunction, progressHandlerType progressHandler)
+{
+    if (!(b1->hasOpenBitmap() && b2->hasOpenBitmap()))
+        throw no_bitmap_open_exception("Both bitmaps must have images open");
+    int width = b1->getWidth();
+    int height = b1->getHeight();
+
+    if (b2->getWidth() != width || b2->getHeight() != height)
+        throw bitmap_size_mismatch("Both bitmaps must have equal dimensions");
+
+    Bitmap* result = new Bitmap(width, height);
+
+    Pixel p1;
+    Pixel p2;
+    int totalPixels = width * height;
+    int pixelNumber = 0;
+
+    if (progressHandler)
+        progressHandler(0);
+
+    for (int x = 0; x < width; x++)
+    {
+        for (int y = 0; y < height; y++, pixelNumber++)
+        {
+            if (progressHandler && pixelNumber % PROGRESS_BAR_UPDATE_TRESHOLD == 0)
+                progressHandler((pixelNumber * 100) / totalPixels);
+            
+            p1 = b1->getPixelAtFast(x, y);
+            p2 = b2->getPixelAtFast(x, y);
+            result->setPixelAtFast(x, y, combinationFunction(p1, p2));
+        }
+    }
+
+    if (progressHandler)
+        progressHandler(100);
+
+    return result;
 }

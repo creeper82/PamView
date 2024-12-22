@@ -12,9 +12,9 @@
 #include <fstream>
 #include <functional>
 
-PamViewWindow::PamViewWindow() : PamViewWindow(new Bitmap()) {}
+PamViewWindow::PamViewWindow(QWidget *parent) : PamViewWindow(new Bitmap(), parent) {}
 
-PamViewWindow::PamViewWindow(Bitmap *initialBitmap) {
+PamViewWindow::PamViewWindow(Bitmap *initialBitmap, QWidget *parent) : QMainWindow(parent) {
   bitmap1 = initialBitmap;
   bitmap2 = new Bitmap();
 
@@ -153,6 +153,18 @@ void PamViewWindow::setFirstBitmap() { setActiveBitmap(FIRST_BITMAP); }
 
 void PamViewWindow::setSecondBitmap() { setActiveBitmap(SECOND_BITMAP); }
 
+void PamViewWindow::sumBitmaps() {
+    combineActiveBitmapsAndShow(PixelCombinations::add);
+}
+
+void PamViewWindow::diffBitmaps() {
+    combineActiveBitmapsAndShow(PixelCombinations::substract);
+}
+
+void PamViewWindow::multiplyBitmaps() {
+    combineActiveBitmapsAndShow(PixelCombinations::multiply);
+}
+
 void PamViewWindow::bitmapDetails() {
   int width = getActiveBitmap()->getWidth();
   int height = getActiveBitmap()->getHeight();
@@ -171,6 +183,12 @@ void PamViewWindow::bitmapDetails() {
                          .arg(height)
                          .arg(mbBitmap)
                          .arg(mbUndo));
+}
+
+void PamViewWindow::showEvent(QShowEvent *event) {
+  QMainWindow::showEvent(event);
+  if (getActiveBitmap()->hasOpenBitmap())
+    canvas->fitInView(pixmapItem, Qt::KeepAspectRatio);
 }
 
 void PamViewWindow::createActions() {
@@ -245,13 +263,28 @@ void PamViewWindow::createActions() {
   // DualBitmap toggles
   firstBitmapAct = new QAction(tr("&First"), this);
   firstBitmapAct->setStatusTip(tr("Switch to the first bitmap"));
+  firstBitmapAct->setShortcut(Qt::Key_1 | Qt::CTRL);
   connect(firstBitmapAct, &QAction::triggered, this,
           &PamViewWindow::setFirstBitmap);
 
   secondBitmapAct = new QAction(tr("&Second"), this);
   secondBitmapAct->setStatusTip(tr("Switch to the second bitmap"));
+  secondBitmapAct->setShortcut(Qt::Key_2 | Qt::CTRL);
   connect(secondBitmapAct, &QAction::triggered, this,
           &PamViewWindow::setSecondBitmap);
+
+  sumBitmapsAct = new QAction(tr("&Sum"), this);
+  sumBitmapsAct->setStatusTip(tr("Display the sum of both images"));
+  connect(sumBitmapsAct, &QAction::triggered, this,
+          &PamViewWindow::sumBitmaps);
+
+  diffBitmapsAct = new QAction(tr("&Difference"), this);
+  diffBitmapsAct->setStatusTip(tr("Display the difference of both images"));
+  connect(diffBitmapsAct, &QAction::triggered, this, &PamViewWindow::diffBitmaps);
+
+  multiplyBitmapsAct = new QAction(tr("&Multiplication"), this);
+  multiplyBitmapsAct->setStatusTip(tr("Display the product of both images"));
+  connect(multiplyBitmapsAct, &QAction::triggered, this, &PamViewWindow::multiplyBitmaps);
 
   propertiesAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout),
                               tr("&Properties"), this);
@@ -284,6 +317,11 @@ void PamViewWindow::createMenus() {
   dualBitmapMenu = menuBar()->addMenu(tr("&DualBitmap"));
   dualBitmapMenu->addAction(firstBitmapAct);
   dualBitmapMenu->addAction(secondBitmapAct);
+  combineMenu = dualBitmapMenu->addMenu(tr("&Combine images"));
+
+  combineMenu->addAction(sumBitmapsAct);
+  combineMenu->addAction(diffBitmapsAct);
+  combineMenu->addAction(multiplyBitmapsAct);
 
   infoMenu = menuBar()->addMenu(tr("&Info"));
   infoMenu->addAction(propertiesAct);
@@ -298,6 +336,8 @@ void PamViewWindow::renderCanvas() {
   undoAct->setEnabled(hasOpenBitmap && bitmap->canUndo());
 
   transformMenu->setEnabled(hasOpenBitmap);
+
+  combineMenu->setEnabled(bitmap1->hasOpenBitmap() && bitmap2->hasOpenBitmap());
 
   if (hasOpenBitmap) {
     int width = bitmap->getWidth();
@@ -406,8 +446,20 @@ void PamViewWindow::handleSaveExceptions() {
   }
 }
 
+void PamViewWindow::handleCombineExceptions() {
+  try {
+    throw;
+  } catch (no_bitmap_open_exception) {
+    displayError(tr("Both bitmaps must have images in order to combine."));
+  } catch (bitmap_size_mismatch) {
+    displayError(tr("Bitmap dimensions must be equal in order to combine."));
+  } catch (std::exception) {
+    displayError(tr("Unrecognized error occured. Operation failed."));
+  }
+}
+
 void PamViewWindow::transformActiveBitmapAndRender(
-    transformType transformFunction) {
+    pixelTransformFunction transformFunction) {
   disableTopMenus();
 
   getActiveBitmap()->transformImage(
@@ -420,7 +472,7 @@ void PamViewWindow::transformActiveBitmapAndRender(
 }
 
 void PamViewWindow::transformActiveBitmapAndRender(
-    transformWithLevelType transformFunction, int level) {
+    pixelTransformWithLevelFunction transformFunction, int level) {
   disableTopMenus();
 
   getActiveBitmap()->transformImage(
@@ -430,6 +482,23 @@ void PamViewWindow::transformActiveBitmapAndRender(
   enableTopMenus();
 
   renderCanvas();
+}
+
+void PamViewWindow::combineActiveBitmapsAndShow(pixelCombinationFunction combineFunction) {
+    Bitmap* result = nullptr;
+
+    try {
+        result = Bitmap::combineBitmaps(
+            bitmap1, bitmap2, combineFunction,
+            std::bind(&PamViewWindow::handleProgress, this, std::placeholders::_1)
+        );
+
+        PamViewWindow* newWindow = new PamViewWindow(result, this);
+        newWindow->show();
+    }
+    catch(std::exception) {
+        handleCombineExceptions();
+    }
 }
 
 void PamViewWindow::showDialogAndSaveAs(FILETYPE filetype) {

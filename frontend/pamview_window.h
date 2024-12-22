@@ -22,8 +22,8 @@ class PamViewWindow : public QMainWindow {
   Q_OBJECT
 
 public:
-  PamViewWindow();
-  PamViewWindow(Bitmap *initialBitmap);
+  PamViewWindow(QWidget *parent = nullptr);
+  PamViewWindow(Bitmap *initialBitmap, QWidget *parent = nullptr);
   ~PamViewWindow();
 
 protected:
@@ -45,9 +45,13 @@ private slots:
   void transformBlackAndWhite();
   void setFirstBitmap();
   void setSecondBitmap();
+  void sumBitmaps();
+  void diffBitmaps();
+  void multiplyBitmaps();
   void bitmapDetails();
 
 private:
+  void showEvent(QShowEvent *event) override;
   void createActions();
   void createMenus();
   void renderCanvas();
@@ -56,9 +60,11 @@ private:
   void displayError(QString message);
   void handleLoadExceptions();
   void handleSaveExceptions();
-  void transformActiveBitmapAndRender(transformType transformFunction);
-  void transformActiveBitmapAndRender(transformWithLevelType transformFunction,
+  void handleCombineExceptions();
+  void transformActiveBitmapAndRender(pixelTransformFunction transformFunction);
+  void transformActiveBitmapAndRender(pixelTransformWithLevelFunction transformFunction,
                                       int level);
+  void combineActiveBitmapsAndShow(pixelCombinationFunction combineFunction);
   void showDialogAndSaveAs(FILETYPE filetype);
   void setupNoBitmapOpenWidget();
   void handleProgress(int progress);
@@ -72,6 +78,7 @@ private:
   QMenu *editMenu;
   QMenu *transformMenu;
   QMenu *dualBitmapMenu;
+  QMenu *combineMenu;
   QMenu *infoMenu;
   QAction *openAct;
   QAction *saveP3Act;
@@ -87,6 +94,9 @@ private:
   QAction *transformBlackAndWhiteAct;
   QAction *firstBitmapAct;
   QAction *secondBitmapAct;
+  QAction *sumBitmapsAct;
+  QAction *diffBitmapsAct;
+  QAction *multiplyBitmapsAct;
   QAction *propertiesAct;
   QStackedWidget *stackedWidget = nullptr;
   QWidget *noBitmapOpenWidget = nullptr;

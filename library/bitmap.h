@@ -6,8 +6,9 @@
 
 typedef std::function<void(int)> progressHandlerType;
 
-typedef std::function<Pixel(Pixel)> transformType;
-typedef std::function<Pixel(Pixel, int)> transformWithLevelType;
+typedef std::function<Pixel(Pixel)> pixelTransformFunction;
+typedef std::function<Pixel(Pixel, int)> pixelTransformWithLevelFunction;
+typedef std::function<Pixel(Pixel, Pixel)> pixelCombinationFunction;
 
 // Represents the Portable AnyMap variant (P-number)
 enum FILETYPE
@@ -87,10 +88,10 @@ class Bitmap {
         void saveToStream(std::ostream &stream, FILETYPE filetype = P3, progressHandlerType progressHandler = nullptr);
 
         // Transforms the image based on given transformation function.
-        void transformImage(transformType, progressHandlerType progressHandler = nullptr);
+        void transformImage(pixelTransformFunction, progressHandlerType progressHandler = nullptr);
 
         // Transforms the image based on given transformation function and strength/level of the transformation.
-        void transformImage(transformWithLevelType, int, progressHandlerType progressHandler = nullptr);
+        void transformImage(pixelTransformWithLevelFunction, int, progressHandlerType progressHandler = nullptr);
 
         // Undo the last change, and load previous bitmap state, if exists. Related: canUndo()
         void undoLastChange();
@@ -108,6 +109,9 @@ class Bitmap {
         Bitmap& operator=(const Bitmap&) = delete;
 
         ~Bitmap();
+
+        // Combines two bitmaps according to the combination function, and returns the result. Both must have equal dimensions.
+        static Bitmap* combineBitmaps(Bitmap* b1, Bitmap* b2, pixelCombinationFunction combinationFunction, progressHandlerType progressHandler = nullptr);
     private:
         void freeMemory();
         void freePreviousBitmapStateMemory();

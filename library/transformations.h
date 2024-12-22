@@ -20,3 +20,9 @@ namespace PixelTransformations {
     // Returns the pixel either fully white or fully black. Uses luminance formula to decide.
     Pixel blacknwhite(Pixel pixel);
 }
+
+namespace PixelCombinations {
+    Pixel add(Pixel p1, Pixel p2);
+    Pixel substract(Pixel p1, Pixel p2);
+    Pixel multiply(Pixel p1, Pixel p2);
+}

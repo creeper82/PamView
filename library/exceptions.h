@@ -81,3 +81,12 @@ public:
 
     bool isEof;
 };
+
+class bitmap_size_mismatch : public std::exception {
+private:
+  std::string message;
+
+public:
+  bitmap_size_mismatch(const char *msg) : message(msg) {}
+  const char *what() const throw() { return message.c_str(); }
+};

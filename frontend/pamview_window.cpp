@@ -245,11 +245,13 @@ void PamViewWindow::createActions() {
   // DualBitmap toggles
   firstBitmapAct = new QAction(tr("&First"), this);
   firstBitmapAct->setStatusTip(tr("Switch to the first bitmap"));
+  firstBitmapAct->setShortcut(Qt::Key_1 | Qt::CTRL);
   connect(firstBitmapAct, &QAction::triggered, this,
           &PamViewWindow::setFirstBitmap);
 
   secondBitmapAct = new QAction(tr("&Second"), this);
   secondBitmapAct->setStatusTip(tr("Switch to the second bitmap"));
+  secondBitmapAct->setShortcut(Qt::Key_2 | Qt::CTRL);
   connect(secondBitmapAct, &QAction::triggered, this,
           &PamViewWindow::setSecondBitmap);
 

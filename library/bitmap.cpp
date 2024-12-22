@@ -184,7 +184,7 @@ void Bitmap::saveToStream(std::ostream &stream, FILETYPE filetype, progressHandl
     Parser::saveBitmapTo(*this, stream, filetype, progressHandler);
 }
 
-void Bitmap::transformImage(transformType transformFunction, progressHandlerType progressHandler)
+void Bitmap::transformImage(pixelTransformFunction transformFunction, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {
@@ -211,7 +211,7 @@ void Bitmap::transformImage(transformType transformFunction, progressHandlerType
     }
 }
 
-void Bitmap::transformImage(transformWithLevelType transformFunctionWithLevel, int level, progressHandlerType progressHandler)
+void Bitmap::transformImage(pixelTransformWithLevelFunction transformFunctionWithLevel, int level, progressHandlerType progressHandler)
 {
     if (hasOpenBitmap())
     {

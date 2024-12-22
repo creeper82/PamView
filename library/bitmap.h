@@ -6,8 +6,8 @@
 
 typedef std::function<void(int)> progressHandlerType;
 
-typedef std::function<Pixel(Pixel)> transformType;
-typedef std::function<Pixel(Pixel, int)> transformWithLevelType;
+typedef std::function<Pixel(Pixel)> pixelTransformFunction;
+typedef std::function<Pixel(Pixel, int)> pixelTransformWithLevelFunction;
 
 // Represents the Portable AnyMap variant (P-number)
 enum FILETYPE
@@ -87,10 +87,10 @@ class Bitmap {
         void saveToStream(std::ostream &stream, FILETYPE filetype = P3, progressHandlerType progressHandler = nullptr);
 
         // Transforms the image based on given transformation function.
-        void transformImage(transformType, progressHandlerType progressHandler = nullptr);
+        void transformImage(pixelTransformFunction, progressHandlerType progressHandler = nullptr);
 
         // Transforms the image based on given transformation function and strength/level of the transformation.
-        void transformImage(transformWithLevelType, int, progressHandlerType progressHandler = nullptr);
+        void transformImage(pixelTransformWithLevelFunction, int, progressHandlerType progressHandler = nullptr);
 
         // Undo the last change, and load previous bitmap state, if exists. Related: canUndo()
         void undoLastChange();

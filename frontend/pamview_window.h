@@ -56,8 +56,8 @@ private:
   void displayError(QString message);
   void handleLoadExceptions();
   void handleSaveExceptions();
-  void transformActiveBitmapAndRender(transformType transformFunction);
-  void transformActiveBitmapAndRender(transformWithLevelType transformFunction,
+  void transformActiveBitmapAndRender(pixelTransformFunction transformFunction);
+  void transformActiveBitmapAndRender(pixelTransformWithLevelFunction transformFunction,
                                       int level);
   void showDialogAndSaveAs(FILETYPE filetype);
   void setupNoBitmapOpenWidget();

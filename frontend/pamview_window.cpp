@@ -407,7 +407,7 @@ void PamViewWindow::handleSaveExceptions() {
 }
 
 void PamViewWindow::transformActiveBitmapAndRender(
-    transformType transformFunction) {
+    pixelTransformFunction transformFunction) {
   disableTopMenus();
 
   getActiveBitmap()->transformImage(
@@ -420,7 +420,7 @@ void PamViewWindow::transformActiveBitmapAndRender(
 }
 
 void PamViewWindow::transformActiveBitmapAndRender(
-    transformWithLevelType transformFunction, int level) {
+    pixelTransformWithLevelFunction transformFunction, int level) {
   disableTopMenus();
 
   getActiveBitmap()->transformImage(

@@ -5,7 +5,7 @@ namespace PixelTransformations {
     // Returns the pixel with adjusted brightness (level -100 to 100).
     Pixel brightness(Pixel pixel, int level);
 
-    // Returns the pixel with adjusted contrast (level -100 to 100).
+    // Returns the pixel with adjusted contrast (level -100 to 100). NOT IMPLEMENTED
     Pixel contrast(Pixel pixel, int level);
 
     // Returns the pixel with adjusted saturation (level -100 to 100).

@@ -8,6 +8,7 @@ typedef std::function<void(int)> progressHandlerType;
 
 typedef std::function<Pixel(Pixel)> pixelTransformFunction;
 typedef std::function<Pixel(Pixel, int)> pixelTransformWithLevelFunction;
+typedef std::function<Pixel(Pixel, Pixel)> pixelCombinationFunction;
 
 // Represents the Portable AnyMap variant (P-number)
 enum FILETYPE
@@ -108,6 +109,9 @@ class Bitmap {
         Bitmap& operator=(const Bitmap&) = delete;
 
         ~Bitmap();
+
+        // Combines two bitmaps according to the combination function, and returns the result. Both must have equal dimensions.
+        static Bitmap* combineBitmaps(Bitmap* b1, Bitmap* b2, pixelCombinationFunction combinationFunction, progressHandlerType progressHandler = nullptr);
     private:
         void freeMemory();
         void freePreviousBitmapStateMemory();

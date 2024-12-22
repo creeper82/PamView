@@ -23,6 +23,12 @@ The following effects can be applied:
 - black and white
 - negative
 
+The following image combinations can be applied:
+
+- sum
+- difference
+- product
+
 ### More features
 Also worth noting:
 

@@ -285,6 +285,7 @@ Bitmap* Bitmap::combineBitmaps(Bitmap *b1, Bitmap *b2, pixelCombinationFunction 
 {
     if (!(b1->hasOpenBitmap() && b2->hasOpenBitmap()))
         throw no_bitmap_open_exception("Both bitmaps must have images open");
+
     int width = b1->getWidth();
     int height = b1->getHeight();
 
@@ -295,6 +296,7 @@ Bitmap* Bitmap::combineBitmaps(Bitmap *b1, Bitmap *b2, pixelCombinationFunction 
 
     Pixel p1;
     Pixel p2;
+    
     int totalPixels = width * height;
     int pixelNumber = 0;
 

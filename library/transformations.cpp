@@ -32,9 +32,10 @@ namespace PixelTransformations
         return pixel;
     }
 
-        Pixel saturation(Pixel pixel, int level)
-        {
-            if (pixel.r == pixel.g && pixel.g == pixel.b) return pixel;
+    Pixel saturation(Pixel pixel, int level)
+    {
+        if (pixel.r == pixel.g && pixel.g == pixel.b)
+            return pixel;
 
         HSVColor hsv = Conversions::RGBToHSV(pixel);
 
@@ -60,7 +61,8 @@ namespace PixelTransformations
 }
 
 namespace PixelCombinations {
-    Pixel add(Pixel p1, Pixel p2) {
+    Pixel add(Pixel p1, Pixel p2)
+    {
         Pixel result;
         result.r = ((float)p1.r / 2 + (float)p2.r / 2);
         result.g = (float)p1.g / 2 + (float)p2.g / 2;
@@ -68,7 +70,8 @@ namespace PixelCombinations {
         return result;
     }
 
-    Pixel substract(Pixel p1, Pixel p2) {
+    Pixel substract(Pixel p1, Pixel p2)
+    {
         Pixel result;
         result.r = std::max((int)p1.r - (int)p2.r, 0);
         result.g = std::max((int)p1.g - (int)p2.g, 0);
@@ -76,7 +79,8 @@ namespace PixelCombinations {
         return result;
     }
 
-    Pixel multiply(Pixel p1, Pixel p2) {
+    Pixel multiply(Pixel p1, Pixel p2)
+    {
         Pixel result;
         result.r = ((p1.r / 255.0) * (p2.r / 255.0)) * 255;
         result.g = ((p1.g / 255.0) * (p2.g / 255.0)) * 255;

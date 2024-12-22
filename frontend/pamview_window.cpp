@@ -12,9 +12,9 @@
 #include <fstream>
 #include <functional>
 
-PamViewWindow::PamViewWindow() : PamViewWindow(new Bitmap()) {}
+PamViewWindow::PamViewWindow(QWidget *parent) : PamViewWindow(new Bitmap(), parent) {}
 
-PamViewWindow::PamViewWindow(Bitmap *initialBitmap) {
+PamViewWindow::PamViewWindow(Bitmap *initialBitmap, QWidget *parent) : QMainWindow(parent) {
   bitmap1 = initialBitmap;
   bitmap2 = new Bitmap();
 

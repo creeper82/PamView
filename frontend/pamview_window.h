@@ -22,8 +22,8 @@ class PamViewWindow : public QMainWindow {
   Q_OBJECT
 
 public:
-  PamViewWindow();
-  PamViewWindow(Bitmap *initialBitmap);
+  PamViewWindow(QWidget *parent = nullptr);
+  PamViewWindow(Bitmap *initialBitmap, QWidget *parent = nullptr);
   ~PamViewWindow();
 
 protected:
